@@ -1,0 +1,5 @@
+doc/_build
+*.pyc
+*/*.pyc
+*/*/*.pyc
+
