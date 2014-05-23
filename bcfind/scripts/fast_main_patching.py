@@ -10,19 +10,15 @@ from scipy.spatial import cKDTree
 import pandas as pd
 import utils
 import parameters
+import argparse
 
+parser = argparse.ArgumentParser(description="find minimum number of nearest neighbors for a connected graph; find seeds for the subsequent step of creating patches of the data")
+parser.add_argument("data_file", help="path to the markers file")
+parser.add_argument("outdir", help="where to save minimum nearest neighbors and seeds")
+args = parser.parse_args()
 
-def usage():
-    print "python " + sys.argv[0] + " data_file outdir"
-    print "data_file: path to the markers file"
-    print "outdir: where to save minimum nearest neighbors and seeds"
-
-if len(sys.argv) != 3:
-    usage()
-    sys.exit(1)
-
-data_file = sys.argv[1]
-outdir = utils.add_trailing_slash(sys.argv[2])
+data_file = args.data_file
+outdir = utils.add_trailing_slash(args.outdir)
 
 outdir_seeds = outdir + 'seeds/'
 outdir_nn = outdir + 'nn/'
