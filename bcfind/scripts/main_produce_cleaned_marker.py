@@ -1,5 +1,5 @@
 """
-Invoke this script to merge the results from every single patch produced by the Manifold filter.
+Invoke this script to merge the results from each patch produced by the Manifold filter.
 """
 
 import sys
@@ -7,21 +7,17 @@ import pandas as pd
 import utils
 import parameters
 import numpy as np
+import argparse
 
+parser = argparse.ArgumentParser(description="merge results from each patch produced by the Manifold Filter")
+parser.add_argument("path", help="where all patches markers files were saved")
+parser.add_argument("outdir", help="where to save merged markers file with reconstruction distances")
+parser.add_argument("--debug", help="saves csv debug files", action="store_true")
+args = parser.parse_args()
 
-def usage():
-    print "python " + sys.argv[0] + " path outdir debug"
-    print "path: where all patches markers files where saved"
-    print "outdir: where to save merged markers file with reconstruction distances"
-    print "debug: decides if the script saves csv files for CloudCompare"
-
-if len(sys.argv) != 4:
-    usage()
-    sys.exit(1)
-
-path = utils.add_trailing_slash(sys.argv[1])
-outdir = utils.add_trailing_slash(sys.argv[2])
-debug = int(sys.argv[3])
+path = utils.add_trailing_slash(args.path)
+outdir = utils.add_trailing_slash(args.outdir)
+debug = args.debug
 
 utils.make_dir(outdir)
 
