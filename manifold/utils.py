@@ -55,7 +55,10 @@ def make_dir(path):
     """
 
     if not os.path.exists(path):
-        os.makedirs(path)
+        try:
+            os.makedirs(path)
+        except OSError:
+            print path + ' already existing, skipping creation...'
 
 
 def points_to_substack(points_matrix, name):
