@@ -197,11 +197,30 @@ Finally run from ipython and monitor its execution using ``view.queue_status()``
    
 
 Once semantic deconvolution is completed, you may run ``cell_find.py``
-on the preprocessed images. It's predictive performance should be
+on the preprocessed images. Its predictive performance should be
 improved.
 
 ===============
 Manifold filter
 ===============
 
-:WRITEME:
+The goal of the Manifold Filter is to exploit the manifold structure of some type of brain cells in order to remove false positives produced by the cell finder.
+The method has been tested using a whole mouse cerebellum dataset, which shows a strong manifold structure.
+It has been found very effective on removing false positives of such Purkinje somata.
+
+This section explains how to use the manifold filter included in our bcfind software.
+It assumes that a merged markers file has been produced, i.e. a ``your_filename.marker`` which contains the whole dataset.
+It also assumes a ``PARAMETERS.plist`` file with parameters used in the cell finder algorithm 
+and assumes that you have saved substacks results in ``${DATA_DIR}/substacks/mouse1/cerebellum``
+#TODO: non mi ricordo di preciso da dove l'ho preso, ma quello che ho usato sta in /home/logos_users/roberto/data/PARAMETERS.plist
+#TODO: forse rinominare i miei main/script potrebbe essere il caso
+First, set the following variables:
+
+.. code-block:: console
+    $ INPUT_FILE=/path/to/your_filename.marker
+    $ OUTPUT_FOLDER=/where/to/save/results
+    $ PARAMETERS_PLIST_FILE=/path/to/your/PARAMETERS.plist
+    $ SUBSTACKS_FOLDER=${DATA_DIR}/substacks/mouse1/cerebellum
+    $ DEBUG=--debug #Or skip if you do not want to save debug files
+
+When these variables have been set, #TODO finire
