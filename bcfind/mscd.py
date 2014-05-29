@@ -316,7 +316,6 @@ def _patch_ms(patch, args):
     minint = thresholds[0]
     if minint != thresholds[0]:
         tee.log('Warning: minint was lowered')
-    min_mass = minint*27
     if minint <= 1:
         tee.log('minint threshold too low (%d) - I believe there are no cells in this substack' % minint)
         return None

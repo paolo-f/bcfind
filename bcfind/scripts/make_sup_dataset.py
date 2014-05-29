@@ -19,9 +19,7 @@ def inside_margin(c, substack):
     m = substack.plist['Margin']/2
     return min(c.x-m,c.y-m,c.z-m,substack.info['Width']-m-c.x,substack.info['Height']-m-c.y,substack.info['Depth']-m-c.z)
 
-def make_dataset(tensorimage, ss, C, L=12, size=6, save_tiff_files=False, negatives=False):
-# def make_dataset(ss, C, L=7, size=9): # used in the first experiments
-    # hf5 = tables.openFile('/fast/armonia_b/Brain/V_000_stitched_new/full.h5', 'r')
+def make_dataset(tensorimage, ss, C, L=12, size=None, save_tiff_files=False, negatives=False, margin=None):
     hf5 = tables.openFile(tensorimage, 'r')
     X0,Y0,Z0 = ss.info['X0'], ss.info['Y0'], ss.info['Z0']
     origin = (Z0, Y0, X0)
@@ -42,10 +40,6 @@ def make_dataset(tensorimage, ss, C, L=12, size=6, save_tiff_files=False, negati
     for c in C:
         if inside_margin(c,ss) > 0:
             target_tensor_3d[c.z, c.y, c.x] = 1
-            # target_tensor_3d[c.z, c.y, c.x] = 0.99
-            # target_tensor_3d[c.z-1:c.z+2, c.y-1:c.y+2, c.x-1:c.x+2] = 0.99
-    # target_tensor_3d = filters.convolve(target_tensor_3d, weights=k, mode='constant', cval=0.0)
-    # target_tensor_3d = filters.gaussian_filter(target_tensor_3d, sigma=5, mode='constant', cval=0.0)
     target_tensor_3d = gfilter.gaussian_filter(target_tensor_3d, sigma=3.5,
                                                mode='constant', cval=0.0,
                                                truncate=1.5)
@@ -76,7 +70,7 @@ def make_dataset(tensorimage, ss, C, L=12, size=6, save_tiff_files=False, negati
                             n_neg += 1 # Sample as many negatives as positives
             if negatives:
                 while n_neg > 0:
-                    g = [20,20,20] + np.random.rand(3) * [D-40,H-40,W-40]
+                    g = [margin/2,margin/2,margin/2] + np.random.rand(3) * [D-margin,H-margin,W-margin]
                     g = g.astype(int)
                     nbrs = kdtree.query_ball_point(g, r=30)
                     if len(nbrs) == 0:
@@ -111,7 +105,7 @@ def main(args):
             c.x -= 1
             c.y -= 1
             c.z -= 1
-        sdata,starget = make_dataset(args.tensorimage, substack, C, size=args.size, negatives=args.negatives)
+        sdata,starget = make_dataset(args.tensorimage, substack, C, size=args.size, negatives=args.negatives, margin=args.margin)
         data.extend(sdata)
         target.extend(starget)
     X = np.zeros((len(data),data[0].shape[0]), dtype=np.float32)
@@ -155,6 +149,7 @@ def get_parser():
     parser.add_argument('--size', metavar='size', dest='size',
                         action='store', type=int, default=6,
                         help='Input and output patches are cubes of side (2*size+1)**3')
+    parser.add_argument('--margin', dest='margin', type=int, default=40, help='Overlap between adjacent substacks')
     parser.add_argument('--negatives', dest='negatives', action='store_true', help='include "negative" (non cell) examples.')
     parser.add_argument('--no-negatives', dest='negatives', action='store_false', help='Include only cell examples.')
     parser.set_defaults(negatives=False)
