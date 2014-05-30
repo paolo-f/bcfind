@@ -69,7 +69,6 @@ def get_parser():
                         help='needs indir/info.json, substacks, e.g. indir/100905, and GT files e.g. indir/100905-GT.marker')
     parser.add_argument('outdir', metavar='outdir', type=str,
                         help="""where prediction results were saved, e.g. outdir/100905/ms.marker.
-                        Must also contain outdir/100905/PARAMETERS.plist
                         As a special case, if outdir=="GT" then ground truth files are merged
                         """)
     parser.add_argument('outfile', metavar='outfile', type=str,
