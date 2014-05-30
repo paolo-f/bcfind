@@ -36,8 +36,6 @@ class SurfaceCleaner:
 
         rows = X.shape[0]
         distances = np.zeros(rows)
-        #FIXME for speeding up one can adapt the strategy in ClassificationScores.py
-        #FIXME but this is not a critical speed loss, so it's fine like this
         for row in xrange(rows):
             distance = self._metric.compute_single(X[row, :], X_reb[row, :])
             distances[row] = distance
