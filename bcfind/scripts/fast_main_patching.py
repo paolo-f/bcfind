@@ -34,7 +34,7 @@ def main(args):
     utils.make_dir(outdir_seeds)
     utils.make_dir(outdir_nn)
     
-    for folder in xrange(parameters.slurm_jobs):
+    for folder in xrange(parameters.jobs):
         utils.make_dir(outdir_seeds + repr(folder))
     
     data_frame = pd.read_csv(data_file)
@@ -64,7 +64,7 @@ def main(args):
         seed = seeds.pop()
         with open(outdir_seeds + repr(folder) + '/' + repr(seed), 'w') as seed_file:
             seed_file.close()
-        folder = (folder + 1) % parameters.slurm_jobs
+        folder = (folder + 1) % parameters.jobs
 
 
 if __name__ == '__main__':
