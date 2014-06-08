@@ -1,11 +1,12 @@
+#!/usr/bin/env python
 """
 Invoke this script to delete all points above the given threshold in a markers file
 """
 
 import sys
 import pandas as pd
-import manifold.utils
-import manifold.parameters
+import manifold.utils as utils
+import manifold.parameters as parameters
 import argparse
 
 
