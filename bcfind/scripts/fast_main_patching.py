@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Invoke this script to find minimum number of nearest neighbors for a connected graph and to find seeds
 for the subsequent step of creating patches of the data
