@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Invoke this script to add a distance column, filled with zeros, to an existing markers file
 """
