@@ -55,6 +55,8 @@ dir: for example ``${DATA_DIR}/substacks/mouse1/cerebellum/020305/``
 will contain the 3rd (along x), 4th (along y) and 6th (along z)
 substack as a sequence of TIFF files.
 
+.. _run-cell-finder:
+
 ===============
 Run cell finder
 ===============
@@ -199,6 +201,26 @@ Finally run from ipython and monitor its execution using ``view.queue_status()``
 Once semantic deconvolution is completed, you may run ``cell_find.py``
 on the preprocessed images. Its predictive performance should be
 improved.
+
+==================================
+Merging markers from all substacks
+==================================
+
+When the ``find_cells.py`` script has run in each substack, as shown in section :ref:`_run-cell-finder` for a single substack, 
+the user has to merge all the produced markers file in order to obtain a single file containing, for example, the point cloud of 
+Purkinje somata of the mouse cerebellum.
+The ``merge_markers.py`` script serves this purpose. Its usage is
+
+.. code-block:: console
+    
+    $ export MERGED_DATA_DIR=/my/merged/data
+    $ merge_markers.py ${DATA_DIR}/substacks/mouse1/cerebellum/ ${RESULTS_DIR} ${MERGED_DATA_DIR}/your_merged_filename.marker
+
+
+The ``merged_markers.py`` script has a ``--verbose`` option for debug purposes.
+Merging markers is a mandatory step for the application of the Manifold Filter, explained in section :ref:`_manifold-filter`.
+
+.. _manifold-filter:
 
 ===============
 Manifold filter
