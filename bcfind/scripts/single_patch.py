@@ -6,15 +6,15 @@ Invoke this script to compute reconstruction distances for a set of patches.
 import sys
 import numpy as np
 from manifold.PatchMaker import PatchMaker
-import manifold.graph_utils
+import manifold.graph_utils as graph_utils
 from manifold.IsomapEmbedder import IsomapEmbedder
 from manifold.EuclideanMetric import EuclideanMetric
 from manifold.GaussianKernel import GaussianKernel
 from manifold.Lowess import Lowess
 from manifold.SurfaceCleaner import SurfaceCleaner
 import pandas as pd
-import manifold.utils
-import manifold.parameters
+import manifold.utils as utils
+import manifold.parameters as parameters
 import argparse
 
 
