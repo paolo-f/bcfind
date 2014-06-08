@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Invoke this script to merge the results from each patch produced by the Manifold filter.
 """
