@@ -6,7 +6,7 @@ Invoke this script to add a distance column, filled with zeros, to an existing m
 import pandas as pd
 import numpy as np
 import sys
-import manifold.parameters
+import manifold.parameters as parameters
 import argparse
 
 
