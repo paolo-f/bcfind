@@ -202,6 +202,8 @@ Once semantic deconvolution is completed, you may run ``cell_find.py``
 on the preprocessed images. Its predictive performance should be
 improved.
 
+.. _merging-markers:
+
 ==================================
 Merging markers from all substacks
 ==================================
@@ -231,18 +233,10 @@ The method has been tested using a whole mouse cerebellum dataset, which shows a
 It has been found very effective on removing false positives of such Purkinje somata.
 
 This section explains how to use the manifold filter included in our bcfind software.
-It assumes that a merged markers file has been produced, i.e. a ``your_filename.marker`` which contains the whole dataset.
-It also assumes a ``PARAMETERS.plist`` file with parameters used in the cell finder algorithm 
-and assumes that you have saved substacks results in ``${DATA_DIR}/substacks/mouse1/cerebellum``
-#TODO: non mi ricordo di preciso da dove l'ho preso, ma quello che ho usato sta in /home/logos_users/roberto/data/PARAMETERS.plist
-#TODO: forse rinominare i miei main/script potrebbe essere il caso
-First, set the following variables:
+It assumes that a merged markers file has been produced, i.e. a ``${MERGED_DATA_DIR}/your_merged_filename.marker`` which contains the whole dataset, 
+as shown in section :ref:`_merging-markers`.
+The first script that needs to be called is ``fast_main_patching.py``:
 
 .. code-block:: console
-    $ INPUT_FILE=/path/to/your_filename.marker
-    $ OUTPUT_FOLDER=/where/to/save/results
-    $ PARAMETERS_PLIST_FILE=/path/to/your/PARAMETERS.plist
-    $ SUBSTACKS_FOLDER=${DATA_DIR}/substacks/mouse1/cerebellum
-    $ DEBUG=--debug #Or skip if you do not want to save debug files
-
-When these variables have been set, #TODO finire
+    $ export OUTPUT_FOLDER=/where/to/save/results
+    $ fast_main_patching.py ${MERGED_DATA_DIR}/your_merged_filename.marker ${OUTPUT_FOLDER}
