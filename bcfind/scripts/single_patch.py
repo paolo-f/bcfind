@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Invoke this script to compute reconstruction distances for a set of patches.
 """
