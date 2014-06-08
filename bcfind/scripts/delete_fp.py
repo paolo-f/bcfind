@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Invoke this script to delete all points above the given threshold in a markers file
 """
