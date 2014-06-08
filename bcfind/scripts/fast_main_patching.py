@@ -6,11 +6,11 @@ for the subsequent step of creating patches of the data
 
 import sys
 import numpy as np
-import manifold.graph_utils
+import manifold.graph_utils as graph_utils
 from scipy.spatial import cKDTree
 import pandas as pd
-import manifold.utils
-import manifold.parameters
+import manifold.utils as utils
+import manifold.parameters as parameters
 import argparse
 
 
