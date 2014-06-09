@@ -136,13 +136,15 @@ follows:
     $ make_sup_dataset.py --negatives ${DATA_DIR}/substacks/mouse1/cerebellum/\
     ${DATA_DIR}/mouse1/cerebellum.h5 training-set.h5 040604 091205 110207
       
-The training set will be saved in the HDF5 file ``training-set.h5``. Now you may use it for
-training a neural network using
-`pylearn2 <http://deeplearning.net/software/pylearn2/>`_. For this
-purpose, the YAML files in the folder ``demo-yaml`` may be a helpful
-starting point. We found that pretraining two layers as RBMs is
-effective but you may want to try other alternatives. See the pylearn2
-documentation for this purpose.
+The training set will be saved in the HDF5 file
+``training-set.h5``. Now you may use it for training a neural network
+using `pylearn2 <http://deeplearning.net/software/pylearn2/>`_. For
+this purpose, the YAML files in the folder ``demo-yaml`` may be a
+helpful starting point. We found that pretraining two layers as RBMs
+is effective but you may want to try other alternatives such as
+denoising or contractive autoencoders or even avoid pretraining. See
+the pylearn2 documentation for this purpose. In our setting, training
+takes several hours on GPU.
 
 .. note:: The neural network must take as input a 3D patch and respond with an output 3D patch of the same size.
 
@@ -157,46 +159,8 @@ the deconvolved image for substack ``020305`` as follows:
     020305 ${DATA_DIR}/mouse1/cerebellum.h5 trained-network.pkl \
     train-set.h5 ${DECONVOLVED_DIR}
 
-Again, this step can be parallelized on a cluster.
-One possibility is to use `IPython <http://ipython.org/>`_.
-First, create a script ``parallel_sem.py`` as follows:
-
-.. code-block:: python
-
-   from IPython.parallel import Client
-
-   def submit(substack):
-       import argparse
-       import scripts.run_semantic_deconvolution
-       parser = scripts.run_semantic_deconvolution.get_parser()
-       args = parser.parse_args(['/my/data/substacks/mouse1/cerebellum',
-                                 substack, '/my/data/mouse1/cerebellum.h5', 'trained-network.pkl',
-                                 'train-set.h5', '/my/data/mouse1/cerebellum/deconvolved/',
-                                 '--speedup', '4', '--extramargin', '6'])
-       scripts.run_semantic_deconvolution.main(args)
-
-   c = Client()
-   NX, NY, NZ = 15, 40, 15 # be consistent with your choice in make_substacks.py
-   substacks = ['%02d%02d%02d'%(x,y,z) for x in range(NX) for y in range(NY) for z in range(NZ)]
-   view = c.load_balanced_view()
-   r = view.map(submit, substacks)
-
-
-Then start ipython cluster, e.g.
-
-.. code-block:: console
-
-   $ ipcluster start -n 8
-
-
-Finally run from ipython and monitor its execution using ``view.queue_status()``:
-
-.. ipython::
-   :verbatim:
-
-   In [1]: run parallel_sem.py
-   
-   
+Again, this step can be parallelized on a cluster. The forward pass of
+the neural network can be run on GPU if available.
 
 Once semantic deconvolution is completed, you may run ``cell_find.py``
 on the preprocessed images. Its predictive performance should be

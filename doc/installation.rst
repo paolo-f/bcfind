@@ -61,3 +61,5 @@ Citation
 ========
 If you use this software or its results in a scientific context please
 cite the following paper:
+
+P. Frasconi, L. Silvestri, P. Soda, R. Cortini, F. Pavone and G. Iannello. Large-Scale Automated Identification of Mouse Brain Cells in Confocal Light Sheet Microscopy Images. /Bioinformatics/, 2014.
