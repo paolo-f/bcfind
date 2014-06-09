@@ -13,7 +13,7 @@ gt_y_col: name of the y coordinates column in the GT markers file
 gt_z_col: name of the z coordinates column in the GT markers file
 name_col: name of the name column in the markers file, should be something like "MS_CENTER ??(??????)"
 substack_col: name of the substack ID column in the markers file
-slurm_jobs: number of seeds folder to create, in order to parallelize patches reconstruction jobs
+jobs: number of seeds folder to create, in order to parallelize patches reconstruction jobs
 robust_iter: number of robust iterations of Lowess, in order to spot outliers
 weight_threshold: threshold used by Lowess to discard points with too little weight in order to speed up
 """
@@ -28,6 +28,6 @@ gt_y_col = ' y'
 gt_z_col = ' z'
 name_col = 'name'
 substack_col = 'substack'
-slurm_jobs = 64
+jobs = 64
 robust_iter = 5
 weight_threshold = 1e-4

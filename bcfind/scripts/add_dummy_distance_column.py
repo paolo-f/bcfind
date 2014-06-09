@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Invoke this script to add a distance column, filled with zeros, to an existing markers file
 """
@@ -5,21 +6,30 @@ Invoke this script to add a distance column, filled with zeros, to an existing m
 import pandas as pd
 import numpy as np
 import sys
-import parameters
+import manifold.parameters as parameters
+import argparse
 
 
-def usage():
-    print "python " + sys.argv[0] + " infile outfile"
-    print "infile: markers file without the distance column"
-    print "outfile: markers file with a column named distance with all zero values added"
+def get_parser():
+    parser = argparse.ArgumentParser(description=__doc__,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument("infile", help="input markers file without the distance column")
+    parser.add_argument("outfile", help="output markers file with a column named distance with all zero values added")
 
-if len(sys.argv) != 3:
-    usage()
-    sys.exit(1)
+    return parser
 
-infile = sys.argv[1]
-outfile = sys.argv[2]
 
-df = pd.read_csv(infile)
-df[parameters.distance_col] = np.zeros((df.shape[0], ))
-df.to_csv(outfile, index=False)
+def main(args):
+    infile = args.infile
+    outfile = args.outfile
+    
+    df = pd.read_csv(infile)
+    df[parameters.distance_col] = np.zeros((df.shape[0], ))
+    df.to_csv(outfile, index=False)
+
+
+if __name__ == '__main__':
+    parser = get_parser()
+    args = parser.parse_args()
+    main(args)

@@ -55,6 +55,8 @@ dir: for example ``${DATA_DIR}/substacks/mouse1/cerebellum/020305/``
 will contain the 3rd (along x), 4th (along y) and 6th (along z)
 substack as a sequence of TIFF files.
 
+.. _run-cell-finder:
+
 ===============
 Run cell finder
 ===============
@@ -197,11 +199,44 @@ Finally run from ipython and monitor its execution using ``view.queue_status()``
    
 
 Once semantic deconvolution is completed, you may run ``cell_find.py``
-on the preprocessed images. It's predictive performance should be
+on the preprocessed images. Its predictive performance should be
 improved.
+
+.. _merging-markers:
+
+==================================
+Merging markers from all substacks
+==================================
+
+When the ``find_cells.py`` script has run in each substack, as shown in section :ref:`_run-cell-finder` for a single substack, 
+the user has to merge all the produced markers file in order to obtain a single file containing, for example, the point cloud of 
+Purkinje somata of the mouse cerebellum.
+The ``merge_markers.py`` script serves this purpose. Its usage is
+
+.. code-block:: console
+    
+    $ export MERGED_DATA_DIR=/my/merged/data
+    $ merge_markers.py ${DATA_DIR}/substacks/mouse1/cerebellum/ ${RESULTS_DIR} ${MERGED_DATA_DIR}/your_merged_filename.marker
+
+
+The ``merged_markers.py`` script has a ``--verbose`` option for debug purposes.
+Merging markers is a mandatory step for the application of the Manifold Filter, explained in section :ref:`_manifold-filter`.
+
+.. _manifold-filter:
 
 ===============
 Manifold filter
 ===============
 
-:WRITEME:
+The goal of the Manifold Filter is to exploit the manifold structure of some type of brain cells in order to remove false positives produced by the cell finder.
+The method has been tested using a whole mouse cerebellum dataset, which shows a strong manifold structure.
+It has been found very effective on removing false positives of such Purkinje somata.
+
+This section explains how to use the manifold filter included in our bcfind software.
+It assumes that a merged markers file has been produced, i.e. a ``${MERGED_DATA_DIR}/your_merged_filename.marker`` which contains the whole dataset, 
+as shown in section :ref:`_merging-markers`.
+The first script that needs to be called is ``fast_main_patching.py``:
+
+.. code-block:: console
+    $ export OUTPUT_FOLDER=/where/to/save/results
+    $ fast_main_patching.py ${MERGED_DATA_DIR}/your_merged_filename.marker ${OUTPUT_FOLDER}

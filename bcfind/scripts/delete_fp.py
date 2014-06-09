@@ -1,29 +1,39 @@
+#!/usr/bin/env python
 """
-Invoke this script to delete all points in a markers file above the given threshold
+Invoke this script to delete all points above the given threshold in a markers file
 """
 
 import sys
 import pandas as pd
-import utils
-import parameters
+import manifold.utils as utils
+import manifold.parameters as parameters
+import argparse
 
 
-def usage():
-    print "python " + sys.argv[0] + " data_file outdir threshold"
-    print "data_file: path to the markers file with saved reconstruction distances"
-    print "outdir: where to save filtered markers file"
-    print "threshold: numeric value used to delete points with reconstruction distances > threshold"
+def get_parser():
+    parser = argparse.ArgumentParser(description=__doc__,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
+    parser.add_argument("data_file", help="path to the markers file with saved reconstruction distances")
+    parser.add_argument("outdir", help="where to save filtered markers file")
+    parser.add_argument("threshold", type=float, help="float value used to delete points with reconstruction distances > threshold")
 
-if len(sys.argv) != 4:
-    usage()
-    sys.exit(1)
+    return parser
 
-data_file = sys.argv[1]
-outdir = utils.add_trailing_slash(sys.argv[2])
-threshold = sys.argv[3]
 
-utils.make_dir(outdir)
+def main(args):
+    data_file = args.data_file
+    outdir = utils.add_trailing_slash(args.outdir)
+    hreshold = args.threshold
+    
+    utils.make_dir(outdir)
+    
+    data_frame = pd.read_csv(data_file)
+    filtered_data_frame = data_frame[data_frame[parameters.distance_col] <= threshold].drop(parameters.distance_col, axis=1)
+    filtered_data_frame.to_csv(outdir + 'threshold_' + repr(threshold) + '.marker', index=False)
 
-data_frame = pd.read_csv(data_file)
-filtered_data_frame = data_frame[data_frame[parameters.distance_col] <= float(threshold)].drop(parameters.distance_col, axis=1)
-filtered_data_frame.to_csv(outdir + 'threshold_' + threshold + '.marker', index=False)
+
+if __name__ == '__main__':
+    parser = get_parser()
+    args = parser.parse_args()
+    main(args)
