@@ -1,8 +1,37 @@
-.. data_:
+.. _paper:
 
-Data and results
-================
+Paper and additional materials
+==============================
 
+Paper
+-----
+If you use this software or its results in a scientific context please
+cite the following paper:
+
+Paolo Frasconi, Ludovico Silvestri, Paolo Soda, Roberto Cortini, Francesco Pavone and Giulio Iannello. Large-Scale Automated Identification of Mouse Brain Cells in Confocal Light Sheet Microscopy Images. *Bioinformatics*, 2014.
+
+
+Additional figures
+------------------
+
+The figure below shows the overall cell identification pipeline.
+
+.. image:: pipeline.png
+   :scale: 40%
+   :alt: Pipeline
+   :align: center
+
+The figure below shows a fragment of the cloud points with colors
+denoting the estimated manifold distance (see section 2.4 of the paper).
+
+.. image:: manifold-filter.png
+   :scale: 70%
+   :alt: Manifold filter
+   :align: center
+         
+
+.. _data:
+           
 Dataset
 -------
 

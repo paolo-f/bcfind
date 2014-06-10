@@ -36,9 +36,9 @@ Campus Biomedico di Roma <http://www.unicampus.it/>`_.
 
    Download and install <installation>
    User guide <guide>
-   Data and results <data>
    Documentation of main scripts <scripts>
    Code internals (for developers) <internals>
+   Paper and additional materials <additional>
 
 
 Indices and tables

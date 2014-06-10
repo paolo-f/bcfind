@@ -202,5 +202,6 @@ as shown in section :ref:`_merging-markers`.
 The first script that needs to be called is ``fast_main_patching.py``:
 
 .. code-block:: console
+
     $ export OUTPUT_FOLDER=/where/to/save/results
     $ fast_main_patching.py ${MERGED_DATA_DIR}/your_merged_filename.marker ${OUTPUT_FOLDER}
