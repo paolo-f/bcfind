@@ -131,7 +131,7 @@ def main(args):
                 parameters.distance_col: surface_distance_penalty})
             rebuild_df.to_csv(outdir_reconstructions + seed + '.csv', index=False)
             
-            data_frame_patch.to_csv(outdir_csvs + seed + '.csv', cols=[parameters.x_col,
+            data_frame_patch.to_csv(outdir_csvs + seed + '.csv', columns=[parameters.x_col,
                 parameters.y_col,
                 parameters.z_col,
                 parameters.distance_col], index=False)
