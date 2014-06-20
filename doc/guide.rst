@@ -199,8 +199,20 @@ It has been found very effective on removing false positives of such Purkinje so
 This section explains how to use the manifold filter included in our bcfind software.
 It assumes that a merged markers file has been produced, i.e. a ``${MERGED_DATA_DIR}/your_merged_filename.marker`` which contains the whole dataset, 
 as shown in section :ref:`_merging-markers`.
+
+In ``${BCFIND_INSTALL_DIR}/manifold`` you can find the ``parameters.py`` file, which contains the more or less stable parameters of the manifold filter, along with their meaning. Such parameters are tuned for our experiments.
+
 The first script that needs to be called is ``fast_main_patching.py``:
 
 .. code-block:: console
     $ export OUTPUT_FOLDER=/where/to/save/results
     $ fast_main_patching.py ${MERGED_DATA_DIR}/your_merged_filename.marker ${OUTPUT_FOLDER}
+
+Such script is a sort of preprocessing that analyzes the markers in ``${MERGED_DATA_DIR}/your_merged_filename.marker`` and output relevant information for the subsequent step of the filter.
+In particular, it outputs a file, whose filename is the number of nearest neighbors needed to build the data graph, in ``${OUTPUT_FOLDER}/nn``.
+Moreover, in ``${OUTPUT_FOLDER}/seeds`` you will find a list of folders whose names are ``{0, 1, ..., (jobs-1)}``, where ``jobs`` is a parameter defined in the aforementioned ``parameters.py`` file.
+
+The next script to be called is ``single_patch.py`` and it needs to be called multiple times, in particular once for each folder contained in ``${OUTPUT_FOLDER}/seeds``.
+It is easy to understand that this step can be parallelized: depending on how many cores you have at your disposal, you can set the ``jobs`` parameter in ``parameters.py`` to create the corrisponding number of folders in ``${OUTPUT_FOLDERS}/seeds``.
+The ``single_patch.py`` script is the one which actually computes the distances to do the filtering.
+#TODO: finire
