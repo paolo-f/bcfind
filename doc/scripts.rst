@@ -44,7 +44,13 @@ results_table.py
    :func: get_parser
    :prog: results_table.py
 
+merge_markers.py
+^^^^^^^^^^^^^^^^
 
+.. argparse::
+    :module: bcfind.scripts.merge_markers
+    :func: get_parser
+    :prog: merge_markers.py
 
 Semantic deconvolution
 ----------------------
@@ -80,3 +86,35 @@ run_semantic_deconvolution.py
 
 Manifold modeling
 -----------------
+
+fast_main_patching.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.fast_main_patching
+    :func: get_parser
+    :prog: fast_main_patching.py
+
+single_patch.py
+^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.single_patch
+    :func: get_parser
+    :prog: single_patch.py
+
+main_produce_cleaned_marker.py
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.main_produce_cleaned_marker
+    :func: get_parser
+    :prog: main_produce_cleaned_marker.py
+
+delete_fp.py
+^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.delete_fp
+    :func: get_parser
+    :prog: delete_fp.py
