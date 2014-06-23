@@ -213,6 +213,32 @@ In particular, it outputs a file, whose filename is the number of nearest neighb
 Moreover, in ``${OUTPUT_FOLDER}/seeds`` you will find a list of folders whose names are ``{0, 1, ..., (jobs-1)}``, where ``jobs`` is a parameter defined in the aforementioned ``parameters.py`` file.
 
 The next script to be called is ``single_patch.py`` and it needs to be called multiple times, in particular once for each folder contained in ``${OUTPUT_FOLDER}/seeds``.
-It is easy to understand that this step can be parallelized: depending on how many cores you have at your disposal, you can set the ``jobs`` parameter in ``parameters.py`` to create the corrisponding number of folders in ``${OUTPUT_FOLDERS}/seeds``.
+It is easy to understand that this step can be parallelized: depending on how many cores you have at your disposal, you can set the ``jobs`` parameter in ``parameters.py`` to create the corrisponding number of folders in ``${OUTPUT_FOLDER}/seeds``.
 The ``single_patch.py`` script is the one which actually computes the distances to do the filtering.
-#TODO: finire
+You can call it in this way:
+
+.. code-block:: console
+    $ export CHARTS_FOLDER=/where/to/save/processed/charts
+    $ # MAX_DISTANCE: maximum geodesic radius for creating charts with Uniform Cost Search
+    $ export MAX_DISTANCE=500
+    $ # SIGMA: the parameter of the Gaussian Kernel used in Lowess Regression
+    $ export SIGMA=30
+    $ single_patch.py ${MERGED_DATA_DIR}/your_merged_filename.marker ${CHARTS_FOLDER} ${MAX_DISTANCE} `cd ${OUTPUT_FOLDER}/nn && ls` ${OUTPUT_FOLDER}/seeds/?
+
+where ``?`` in the last parameter can be changed with the aforementioned folders names ``{0, 1, ..., (jobs    -1)}``.
+The ``single_patch.py`` script has a ``--debug`` option for debug purposes.
+Using it will create CSV debug files for each chart.
+Such files will be saved in special folders inside ``${CHARTS_FOLDER}``.
+
+Once you have finished this step, ``${CHARTS_FOLDER}`` will contain all the processed charts.
+``main_produce_cleaned_marker.py`` will merge all of such charts into a single global file.
+Its usage is
+
+.. code-block:: console
+    $ export FINAL_OUTPUT_FOLDER=/where/to/save/final/results
+    $ main_produce_cleaned_marker.py ${CHARTS_FOLDER} ${FINAL_OUTPUT_FOLDER}
+
+In ``${FINAL_OUTPUT_FOLDER}`` you will find the final markers file.
+Again, this script has a ``--debug`` option which will save a CSV file in the same folder.
+
+These final files have a ``distance`` column: simply delete rows that have such value above a threshold of your choice to discard false positives.
