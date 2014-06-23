@@ -238,7 +238,14 @@ Its usage is
     $ export FINAL_OUTPUT_FOLDER=/where/to/save/final/results
     $ main_produce_cleaned_marker.py ${CHARTS_FOLDER} ${FINAL_OUTPUT_FOLDER}
 
-In ``${FINAL_OUTPUT_FOLDER}`` you will find the final markers file.
+In ``${FINAL_OUTPUT_FOLDER}`` you will find the final markers file, named ``cleaned.marker``.
 Again, this script has a ``--debug`` option which will save a CSV file in the same folder.
 
-These final files have a ``distance`` column: simply delete rows that have such value above a threshold of your choice to discard false positives.
+These final files have a ``distance`` column: simply delete rows that have such value above a ``${THRESHOLD}`` of your choice to discard false positives.
+You can do this using the ``delete_fp.py`` script, which is very straightforward to use:
+
+.. code-block:: console
+    $ export THRESHOLD=20
+    $ delete_fp.py ${FINAL_OUTPUT_FOLDER}/cleaned.marker ${FINAL_OUTPUT_FOLDER} ${THRESHOLD}
+
+In ``${FINAL_OUTPUT_FOLDER}`` you will find the filtered file.
