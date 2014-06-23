@@ -183,7 +183,7 @@ The ``merge_markers.py`` script serves this purpose. Its usage is
     $ merge_markers.py ${DATA_DIR}/substacks/mouse1/cerebellum/ ${RESULTS_DIR} ${MERGED_DATA_DIR}/your_merged_filename.marker
 
 
-The ``merged_markers.py`` script has a ``--verbose`` option for debug purposes.
+The ``merge_markers.py`` script has a ``--verbose`` option for debug purposes.
 Merging markers is a mandatory step for the application of the Manifold Filter, explained in section :ref:`_manifold-filter`.
 
 .. _manifold-filter:
