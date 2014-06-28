@@ -67,16 +67,6 @@ pyl2.cerebellum
 
 ------------------------------------
 
-manifold.ClassificationScores
------------------------------
-
-.. automodule:: manifold.ClassificationScores
-  :members:
-  :undoc-members:
-  :show-inheritance:
-
-------------------------------------
-
 manifold.EuclideanMetric
 -----------------------------
 

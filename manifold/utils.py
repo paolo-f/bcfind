@@ -3,10 +3,6 @@ Various general helpers functions.
 """
 
 import os
-import matplotlib as mpl
-mpl.use('Agg')
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 def add_trailing_slash(path):
@@ -147,31 +143,3 @@ def get_filenames(path):
 
     filenames = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
     return filenames
-
-
-def plot_curve(x, y, xlabel, ylabel, outdir):
-    """
-    Function that saves a *.png file of a plot. It automatically sorts the values for the abscissa
-    and adjust the order of the values for the ordinate.
-
-    Parameters
-
-    x: numpy array of not necessarily sorted values for the abscissa
-    y: numpy array of not necessarily sorted values for the ordinate
-    xlabel: string which is the label for the abscissa
-    ylabel: string which is the label for the ordinate
-    outdir: string which represent a path to where the plot will be saved
-    """
-
-    indexes = np.argsort(x)
-    ordered_x = np.zeros(len(x))
-    ordered_y = np.zeros(len(y))
-    for i in xrange(len(x)):
-        ordered_x[i] = x[indexes[i]]
-        ordered_y[i] = y[indexes[i]]
-    plt.figure()
-    plt.plot(ordered_x, ordered_y)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.grid(which='both', axis='both')
-    plt.savefig(outdir + xlabel + '-' + ylabel)
