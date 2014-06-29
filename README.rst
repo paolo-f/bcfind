@@ -11,4 +11,4 @@ negatives). Furthermore, in the case of Purkinje soma in cerebellum
 images, it estimates manifold distances to filter false positives
 (orange points).
 
-Images for this research were produced by the `Biophisics lab <http://www.lens.unifi.it/index.php?include=research/dynamic_research&researcharea=Biophysics&active=research&menu=research/biophysics/biophysics_menu>`_ of `LENS <http://www.lens.unifi.it/>`_. The software was developed by the `AI Lab <http://ai.dsi.unifi.it/>`_ of `DINFO, Università di Firenze <http://dinfo.unifi.it>`_ in collaboration with `Università Campus Biomedico di Roma <http://www.unicampus.it/>`_.
+Images for this research were produced by the `Biophisics lab <http://www.lens.unifi.it/index.php?include=research/dynamic_research&researcharea=Biophysics&active=research&menu=research/biophysics/biophysics_menu>`_ of `LENS <http://www.lens.unifi.it/>`_. The software was developed by the `AI Lab <http://ai.dinfo.unifi.it/>`_ of `DINFO, Università di Firenze <http://dinfo.unifi.it>`_ in collaboration with `Università Campus Biomedico di Roma <http://www.unicampus.it/>`_.
