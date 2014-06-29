@@ -172,9 +172,8 @@ improved.
 Merging markers from all substacks
 ==================================
 
-When the ``find_cells.py`` script has run in each substack, as shown in section :ref:`_run-cell-finder` for a single substack, 
-the user has to merge all the produced markers file in order to obtain a single file containing, for example, the point cloud of 
-Purkinje somata of the mouse cerebellum.
+After the ``find_cells.py`` script has run in each substack, as shown in section :ref:`run-cell-finder` for a single substack, 
+you need to merge all the markers file in order to obtain a single file containing the point cloud of a larger brain region.
 The ``merge_markers.py`` script serves this purpose. Its usage is
 
 .. code-block:: console
@@ -184,7 +183,7 @@ The ``merge_markers.py`` script serves this purpose. Its usage is
 
 
 The ``merge_markers.py`` script has a ``--verbose`` option for debug purposes.
-Merging markers is a mandatory step for the application of the Manifold Filter, explained in section :ref:`_manifold-filter`.
+Merging markers is a mandatory step before the Manifold Filter can be applied, as explained below.
 
 .. _manifold-filter:
 
@@ -198,7 +197,7 @@ It has been found very effective on removing false positives of such Purkinje so
 
 This section explains how to use the manifold filter included in our bcfind software.
 It assumes that a merged markers file has been produced, i.e. a ``${MERGED_DATA_DIR}/your_merged_filename.marker`` which contains the whole dataset, 
-as shown in section :ref:`_merging-markers`.
+as shown in section :ref:`merging-markers`.
 
 In ``${BCFIND_INSTALL_DIR}/manifold`` you can find the ``parameters.py`` file, which contains the more or less stable parameters of the manifold filter, along with their meaning. Such parameters are tuned for our experiments.
 
@@ -219,6 +218,7 @@ The ``single_patch.py`` script is the one which actually computes the distances 
 You can call it in this way:
 
 .. code-block:: console
+
     $ export CHARTS_FOLDER=/where/to/save/processed/charts
     $ # MAX_DISTANCE: maximum geodesic radius for creating charts with Uniform Cost Search
     $ export MAX_DISTANCE=500
@@ -236,6 +236,7 @@ Once you have finished this step, ``${CHARTS_FOLDER}`` will contain all the proc
 Its usage is
 
 .. code-block:: console
+
     $ export FINAL_OUTPUT_FOLDER=/where/to/save/final/results
     $ main_produce_cleaned_marker.py ${CHARTS_FOLDER} ${FINAL_OUTPUT_FOLDER}
 
@@ -246,6 +247,7 @@ These final files have a ``distance`` column: simply delete rows that have such 
 You can do this using the ``delete_fp.py`` script, which is very straightforward to use:
 
 .. code-block:: console
+
     $ export THRESHOLD=20
     $ delete_fp.py ${FINAL_OUTPUT_FOLDER}/cleaned.marker ${FINAL_OUTPUT_FOLDER} ${THRESHOLD}
 
