@@ -6,13 +6,13 @@ Installation
 Get sources
 ===========
 
-Sources are hosted on `bitbucket
-<http://bitbucket.org/paolo-f/bcfind>`_. To obtain the code, clone the
+Sources are hosted on `github
+<https://github.com/paolo-f/bcfind>`_. To obtain the code, clone the
 repository in some place in your system:
 
 .. code-block:: console
 
-   $ git clone https://paolo-f@bitbucket.org/paolo-f/bcfind.git
+   $ git clone https://github.com/paolo-f/bcfind
    $ export BCFIND_INSTALL_DIR=`pwd`/bcfind
 
 and set the following environment variables in your shell startup script:
