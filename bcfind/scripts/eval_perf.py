@@ -335,13 +335,21 @@ def get_parser():
                         help='Maximum distance from estimated manifold to be included as a prediction')
     parser.add_argument('--curve', dest='curve', action='store_true', help='Make a recall-precision curve.')
     parser.add_argument('--verbose', dest='verbose', action='store_true', help='Verbose output.')
+    parser.add_argument('--merged_markers_folder', metavar='merged_markers_folder', dest='merged_markers_folder',
+                        action='store', type=str, default=None,
+                        help='folder containing merged marker files (for multiview images)')
     parser.set_defaults(verbose=False)
     return parser
 
 
 def main(args):
     substack=SubStack(args.indir,args.substack_id)
-    gt_markers=args.indir+'/'+args.substack_id+'-GT.marker'
+
+    if args.merged_markers_folder:
+        gt_markers=args.merged_markers_folder+'/'+args.substack_id+'-GT.marker'
+    else:
+        gt_markers=args.indir+'/'+args.substack_id+'-GT.marker'
+
     print('Loading ground truth markers from',gt_markers)
     try:
         C_true=substack.load_markers(gt_markers,from_vaa3d=True)
