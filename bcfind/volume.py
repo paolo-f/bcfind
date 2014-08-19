@@ -181,7 +181,7 @@ class ImageSaver(object):
             Should centers be drawn as small circles?
         colorize_voxels : bool, optional
             Should we paint voxels in colors?
-        trajectories : list or None, optional 
+        trajectories : list or None, optional
             If not None, draw mean shift trajectories for every seed
         """
         out_imgs = []
@@ -311,6 +311,8 @@ class SubStack(object):
         self.info = self.plist['SubStacks'][substack_id]
         self.parent = {'Height':self.plist['Height'], 'Width':self.plist['Width'], 'Depth':self.plist['Depth']}
 
+
+
     def load_volume_from_h5(self,h5filename):
         """
         Load the volume from an HDF5 file
@@ -327,8 +329,8 @@ class SubStack(object):
             self.imgs.append(img_z)
             self.pixels.append(img_z.load())
         tee.log(z, 'images read into stack (from h5 file)')
-            
-        
+
+
     def load_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None):
         """Loads a sequence of images into a stack
 
@@ -371,6 +373,8 @@ class SubStack(object):
                 tee.log('.', end='')
         tee.log(z, 'images read into stack')
 
+
+
     def neighbors_graph(self, C):
         X = np.array([[c.x, c.y, c.z] for c in C])
         kdtree=cKDTree(X)
@@ -379,7 +383,7 @@ class SubStack(object):
             c.distances = sorted(distances)[1:]
 
     @save_markers_timer.timed
-    def save_markers(self, filename, C):
+    def save_markers(self, filename, C, round_to_int=True):
         """save_markers(filename, C)
 
         Save markers to a Vaa3D readable file.
@@ -390,6 +394,8 @@ class SubStack(object):
             Name of the file where markers are saved
         C : list
             List of :class:`Center` objects
+        round_to_int: bool, optional
+            If true, round coordinates to the closest int values before saving
         """
         if len(C) == 0:  # might happen when logging deletions as marker files
             return
@@ -401,7 +407,10 @@ class SubStack(object):
             r, g, b = hi2rgb[int(255*c.hue)][156]
             radius = 0
             shape = 1
-            cx, cy, cz = int(round(c.x)), int(round(c.y)), int(round(c.z))
+            if round_to_int:
+                cx, cy, cz = int(round(c.x)), int(round(c.y)), int(round(c.z))
+            else:
+                cx, cy, cz = c.x, c.y, c.z
             comment = str(c)
             print(','.join(map(str, [1+cx, 1+cy, 1+cz, radius, shape, c.name, comment, r, g, b])), file=ostream)
         ostream.close()
@@ -443,7 +452,7 @@ class SubStack(object):
                     print('Warning: comment string unformatted (%s), is this really a predicted marker file?'%c.comment)
             C.append(c)
         return C
-            
+
     def distance_matrix(self, C):
         d = {}
         for i1, c1 in enumerate(C):
