@@ -3,15 +3,15 @@ import numpy as np
 from progressbar import *
 import scipy.ndimage.filters as filters
 import theano
-import theano.tensor as T
-from theano.tensor.shared_randomstreams import RandomStreams
 
 from pylearn2.models.autoencoder import *
 from pylearn2.models.mlp import MLP
 
+
 class VPrint(object):
     def __init__(self,verbose=True):
-        self.verbose=verbose
+        self.verbose = verbose
+
     def __call__(self, *args, **kwargs):
         if self.verbose:
             argstring = " ".join([str(arg) for arg in args])
@@ -23,11 +23,13 @@ class VPrint(object):
 
 vprint = VPrint()
 
+
 def print_percentiles(x,name):
     vprint('Percentiles of', name)
     for v in np.percentile(x,[10,20,30,40,50,60,70,80,90]):
-        vprint(' %.2f'%v, end='')
+        vprint(' %.2f' % v, end='')
     vprint('')
+
 
 def normalize(x, normalizer):
     vprint('Normalizing. Normalizer ranges in %.1f--%.1f' % (np.min(normalizer),np.max(normalizer)))
@@ -35,7 +37,7 @@ def normalize(x, normalizer):
     vprint('rescaling..')
     mm = np.min(n_x)
     vprint('Min value', mm)
-    if mm<0:
+    if mm < 0:
         vprint('translating by', -mm)
         n_x = n_x - mm
     MM = np.max(n_x)
@@ -45,14 +47,18 @@ def normalize(x, normalizer):
         n_x = n_x / MM
     return n_x
 
+
 def logistic(x):
     return 1.0/(1.0+np.exp(-x))
+
 
 class Predictor(object):
     def __init__(self, model):
         self.model = model
+
     def predict(self, X):
         raise NotImplementedError('')
+
 
 class PredictorFromPylearn2MLP(Predictor):
     def __init__(self, model):
@@ -93,19 +99,19 @@ def filter_volume(np_tensor_3d, Xmean, Xstd,
     rangey = range(extramargin, sc[1]-extramargin, speedup)
     rangex = range(extramargin, sc[2]-extramargin, speedup)
     n_points = len(rangex)*len(rangey)
-    
+
     normalizer = np.zeros(sc)
     print('Patch size: %dx%dx%d (%d)' % (1+2*extramargin, 1+2*extramargin, 1+2*extramargin, (1+2*extramargin)**3))
     print('Will subsample jumping by',speedup,'voxels')
     pbar = ProgressBar(widgets=['Processing %d slices (%d patches): ' % (len(rangez),len(rangex)*len(rangey)*len(rangez)),
                                 Percentage(), ' ', AdaptiveETA()])
     ndone = 0
-    for z0 in pbar(rangez): # range(extramargin, sc[0]-extramargin):
+    for z0 in pbar(rangez):
         data = np.zeros((n_points, patchlen))
         # print('Collecting data for z=',z0, ': ', data.nbytes/(2**20), 'MBytes')
         i = 0
-        for y0 in rangey: # range(extramargin, sc[1]-extramargin):
-            for x0 in rangex: # range(extramargin, sc[2]-extramargin):
+        for y0 in rangey:
+            for x0 in rangex:
                 patch = np_tensor_3d[z0-extramargin:z0+extramargin+1,
                                      y0-extramargin:y0+extramargin+1,
                                      x0-extramargin:x0+extramargin+1]
@@ -114,8 +120,8 @@ def filter_volume(np_tensor_3d, Xmean, Xstd,
                 i += 1
         pred_data = predictor.predict(data)
         i = 0
-        for y0 in rangey: # range(extramargin, sc[1]-extramargin):
-            for x0 in rangex: # range(extramargin, sc[2]-extramargin):
+        for y0 in rangey:
+            for x0 in rangex:
                 reconstructed_patch = np.reshape(pred_data[i], (1+2*extramargin,1+2*extramargin,1+2*extramargin))
                 # print_percentiles(reconstructed_patch, 'Reconstructed patch at (%d,%d,%d)'%(z0,y0,x0))
                 # reconstructed_patch = np.reshape(data[i], (1+2*extramargin,1+2*extramargin,1+2*extramargin))
@@ -147,5 +153,3 @@ def filter_volume(np_tensor_3d, Xmean, Xstd,
     reconstruction = np.array(reconstruction*255.0, dtype=np.uint8)
     print_percentiles(reconstruction, 'reconstruction 8 bit')
     return reconstruction
-
-
