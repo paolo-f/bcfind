@@ -14,12 +14,10 @@ from mpl_toolkits.mplot3d import proj3d
 
 from bcfind.volume import *
 
-purkinje_radius = 16
-
 def distance((x1,y1,z1),(x2,y2,z2)):
     return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
 
-def make_graph(C_true,C_pred):
+def make_graph(C_true,C_pred, max_cell_diameter):
     G = networkx.Graph()
     node2center={}
     for i,c in enumerate(C_true):
@@ -35,7 +33,7 @@ def make_graph(C_true,C_pred):
         for nj in [n for n in G.nodes() if n[0]=='p']:
             d=distance((G.node[ni]['x'],G.node[ni]['y'],G.node[ni]['z']),
                        (G.node[nj]['x'],G.node[nj]['y'],G.node[nj]['z']))
-            if d<2*purkinje_radius:
+            if d<2*max_cell_diameter:
                 w = 1.0/max(0.001,d)
                 G.add_edge(ni,nj,weight=w)
     print("Solving max weight matching (%d nodes, %d edges)" % (len(G.nodes()), len(G.edges())))
@@ -49,7 +47,7 @@ def inside(c,substack):
         return False
     return True
 
-def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_file=None):
+def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_file=None, max_cell_diameter=None):
     # max-cardinality bipartite matching
     C_rejected = [c for c in C_pred if c.rejected]
     C_pred = [c for c in C_pred if not c.rejected]
@@ -58,7 +56,7 @@ def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_fil
     true_positives_pred = set() # subset of C_pred that are true positives
     TP=0
     TP_inside=[]
-    G,mate,node2center = make_graph(C_true,C_pred)
+    G,mate,node2center = make_graph(C_true,C_pred, max_cell_diameter)
     # Debug
     # for k1,k2 in mate.iteritems():
     #     c1=node2center[k1]
@@ -73,7 +71,7 @@ def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_fil
         c1=node2center[k1]
         c2=node2center[k2]
         d=distance((c1.x,c1.y,c1.z),(c2.x,c2.y,c2.z))
-        if d<purkinje_radius/2: # a constant criterion is needed!
+        if d<max_cell_diameter/2: # a constant criterion is needed!
             true_positives_pred.add(c2)
             true_positives_true.add(c1)
             TP += 1
@@ -331,6 +329,8 @@ def get_parser():
                         help="""where prediction results were saved, e.g. outdir/100905/ms.marker.
                         Errors are saved in outdir/100905/errors.marker
                         """)
+    parser.add_argument('--max_cell_diameter', dest='max_cell_diameter', type=float, default=16.0,
+                        help='Maximum diameter of a cell')
     parser.add_argument('--manifold-distance', dest='manifold_distance', type=float, default=None,
                         help='Maximum distance from estimated manifold to be included as a prediction')
     parser.add_argument('--curve', dest='curve', action='store_true', help='Make a recall-precision curve.')
@@ -370,7 +370,8 @@ def main(args):
     precision,recall,F1,TP_inside,FP_inside,FN_inside=eval_perf(substack,C_true,C_pred,
                                                                 errors_marker_file=errors_marker_file,
                                                                 rp_file=rp_file,
-                                                                verbose=args.verbose)
+                                                                verbose=args.verbose,
+                                                                max_cell_diameter=args.max_cell_diameter)
 
     with open(args.outdir+'/'+args.substack_id+'/eval.log','w') as ostream:
         print('substack,method,parameter,precision,recall,F1,TP,FP,FN,|true|,|pred|',file=ostream)
