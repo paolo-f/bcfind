@@ -5,9 +5,9 @@ Splits a large 3D image into several substacks.
 Example: if the source stack is stored in /my/data/mouse1/cerebellum the
 program will create substacks in /my/data/substacks/mouse1/cerebellum/
 Each substack is a folder named as xxyyzz (six digits) so for example
-my/data/substacks/mouse1/cerebellum/010002 is the 
+my/data/substacks/mouse1/cerebellum/010002 is the
 2nd along X, 1st along Y, and 3rd along Z.
-A dictionary summarizing the performed split is saved in 
+A dictionary summarizing the performed split is saved in
 /tmp/my/data/substacks/mouse1/cerebellum/info.json
 """
 from __future__ import print_function
@@ -28,7 +28,7 @@ def main(args):
     prefix=None
     convert_to_gray=True
     verbose=True
-    
+
     savewd = os.getcwd()
     os.chdir(args.indir)
     full_path = os.getcwd()
@@ -109,7 +109,7 @@ def main(args):
                 if verbose:
                     print(' ', substack_id, end='')
                 # region.save(substack_dir+'/'+image_file)
-                tmpfile = '/tmp/'+uuid.uuid4()+'.tif'
+                tmpfile = '/tmp/'+str(uuid.uuid4())+'.tif'
                 region.save(tmpfile)
                 subprocess.call(['tiffcp', '-clzw:2', tmpfile, substack_dir+'/'+image_file])
                 os.unlink(tmpfile)
