@@ -7,6 +7,7 @@ from progressbar import *
 
 from bcfind.utils import mkdir_p
 
+
 def pad_if_out_of_range(from_shape, origin, ss_shape):
     """Take a subtensor of shape `ss_shape` from a tensor of shape
 `from_shape` starting from `origin`. All are n-dim tuples.  Returns an
@@ -14,12 +15,13 @@ n-dim tuple of pairs that may be used with numpy.pad
 
     """
     def start(a,b):
-        if b>=a:
+        if b >= a:
             return 0
         else:
             return a-b
+
     def end(c,d):
-        if d<=c:
+        if d <= c:
             return 0
         else:
             return d-c
@@ -56,6 +58,7 @@ performed on the substack.
     hf5.close()
     return np_tensor_3d, minz
 
+
 def save_tensor_as_tif(np_tensor_3d,path, minz, prefix='full_'):
     """Export a 3D numpy tensor as a sequence of tiff files (one for each
 z coordinate). Each file is named as prefix followed by an integer id,
@@ -70,7 +73,7 @@ expected to be stored in the order Z,Y,X
         out_img = Image.fromarray(np_tensor_3d[z,:,:])
         tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
         out_img.save(tempname)
-        destname=path+'/'+prefix+'%06d.tif'%(minz+z)
+        destname = path+'/'+prefix+'%06d.tif' % (minz+z)
         os.system('tiffcp -clzw:2 ' + tempname + ' ' + destname)
         os.remove(tempname)
     print('Saved substack in',path)

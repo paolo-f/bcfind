@@ -3,7 +3,9 @@ Logging information to console
 """
 from __future__ import print_function
 import os.path
-import sys,traceback
+import sys
+import traceback
+
 
 class Colors:
     red = '\033[91m'
@@ -13,14 +15,15 @@ class Colors:
     magenta = '\033[95m'
     clean = '\033[0m'
 
-FILTER={'distance_filter','iterate'}
+FILTER = {'distance_filter','iterate'}
+
 
 class Tee:
     """
     """
     def __init__(self):
         self.ostream = None
-        self.logfilename=''
+        self.logfilename = ''
 
     def logto(self, logfilename, mode='w'):
         if self.logfilename != '':
@@ -28,7 +31,7 @@ class Tee:
         self.logfilename = logfilename
         self.ostream = open(logfilename,mode)
 
-    def error(self, exctype, value, trback, xframe = sys._getframe()):
+    def error(self, exctype, value, trback, xframe=sys._getframe()):
         s = "%s: %s" % (xframe.f_code.co_filename, xframe.f_lineno) + " Exception: %s (%s)\n" % (exctype,value)
         print(Colors.red+s+Colors.clean)
         if self.ostream is not None:
@@ -46,11 +49,11 @@ class Tee:
         if 'end' in kwargs:
             print(argstring,end=kwargs['end'])
             if self.ostream is not None:
-                print("%s:%d: %s"%(fileName, lineno, argstring),end=kwargs['end'],file=self.ostream)
+                print("%s:%d: %s" % (fileName, lineno, argstring),end=kwargs['end'],file=self.ostream)
         else:
             print(argstring)
             if self.ostream is not None:
-                print("%s:%d: %s"%(fileName, lineno, argstring),file=self.ostream)
+                print("%s:%d: %s" % (fileName, lineno, argstring),file=self.ostream)
         sys.stdout.flush()
         if self.ostream is not None:
             self.ostream.flush()
@@ -58,6 +61,8 @@ class Tee:
 tee = Tee()
 
 _old_excepthook = sys.excepthook
+
+
 def myexcepthook(exctype, value, trback):
     tee.error(exctype, value, trback)
     _old_excepthook(exctype, value, trback)

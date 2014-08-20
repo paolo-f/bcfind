@@ -15,12 +15,12 @@ from . import volume
 from . import threshold
 from . import timer
 from .log import tee
-from .utils import mkdir_p
 
 pca_analysis_timer = timer.Timer('PCA analysis')
 mean_shift_timer = timer.Timer('Mean shift')
 ms_timer = timer.Timer('Overall method')
 patch_ms_timer = timer.Timer('Overall method (patch)')
+
 
 def is_local_max(x, y, z, px, ww, hh, dd, min_mass):
     """
@@ -116,7 +116,7 @@ def mean_shift(X, intensities=None, bandwidth=None, seeds=None,
     center_mass_dict = {}
     # tee.log('Fitting NearestNeighbors on', n_points, 'points')
     if use_scipy:
-        kdtree=cKDTree(X)
+        kdtree = cKDTree(X)
     else:
         nbrs = NearestNeighbors(radius=bandwidth).fit(X)
 
@@ -297,7 +297,7 @@ def _patch_ms(patch, args):
     (Lx,Ly,Lz) = np.where(patch > minint)
 
     intensities = patch[(Lx,Ly,Lz)]
-    L=np.array(zip(Lx,Ly,Lz), dtype=np.uint16)
+    L = np.array(zip(Lx,Ly,Lz), dtype=np.uint16)
     tee.log('Found', len(L), 'voxels above the threshold', minint)
     if len(L) < 10:
         tee.log('Too few points (%d) - I believe there are no cells in this substack' % len(L))
@@ -305,11 +305,11 @@ def _patch_ms(patch, args):
 
     bandwidth = args.mean_shift_bandwidth
 
-    radius=args.hi_local_max_radius
+    radius = args.hi_local_max_radius
     reg_maxima = mh.regmax(patch.astype(np.int))
     xx, yy, zz = np.mgrid[:2*radius+1, :2*radius+1, :2*radius+1]
     sphere = (xx - radius) ** 2 + (yy - radius) ** 2 + (zz - radius) ** 2
-    se = sphere<=radius*radius
+    se = sphere <= radius*radius
     f = se.astype(np.float64)
     min_mass = np.sum(f)*minint
     local_mass = mh.convolve(patch, weights=f, mode='constant', cval=0.0)
@@ -363,7 +363,7 @@ def pms(substack, args):
     D = substack.info['Depth']
     W = substack.info['Width']
     H = substack.info['Height']
-    M=20
+    M = 20
     patch = np.zeros((W,H,D))
     for z in range(D):
         patch[:,:,z] = np.array(substack.imgs[z]).T
@@ -375,12 +375,12 @@ def pms(substack, args):
     L = np.zeros((0,3))
     labels = np.zeros(0)
     seeds = []
-    counter=0
+    counter = 0
     for sx in slicesx:
         for sy in slicesy:
             for sz in slicesz:
                 counter += 1
-                tee.log('%d/8:'%counter, 'Analyzing minisubstack',sx,sy,sz)
+                tee.log('%d/8:' % counter, 'Analyzing minisubstack',sx,sy,sz)
                 rval = _patch_ms(patch[sx,sy,sz], args)
                 origin = [sx.start,sy.start,sz.start]
                 if rval is not None:
@@ -417,7 +417,7 @@ def pms(substack, args):
     for i, cc in enumerate(cluster_centers):
         c = volume.Center(cc[0], cc[1], cc[2])
         c.name = 'MS_center %d' % i
-        c.volume = (masses[i]-masses_mean)/masses_std #volumes[i]
+        c.volume = (masses[i]-masses_mean)/masses_std  # volumes[i]
         c.mass = masses[i]
         tee.log(i, cc, c)
         C.append(c)
@@ -437,7 +437,6 @@ def pms(substack, args):
         image_saver.save_above_threshold(Lx,Ly,Lz)
         print(len(C),max(labels),min(labels))
 
-
         Lcluster = [C[int(labels[i])] for i in xrange(len(L))]
         # Note: no trajectories in this case
         image_saver.save_vaa3d(C, Lx, Ly, Lz, Lcluster,
@@ -447,6 +446,7 @@ def pms(substack, args):
         tee.log('Debugging images saved in', args.outdir)
     else:
         tee.log('Debugging images not saved')
+
 
 def _finalize_masses(X, C, intensities):
     """

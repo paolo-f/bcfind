@@ -6,8 +6,6 @@ Main script for finding cell soma using the mean shift algorithm
 from __future__ import print_function
 import time
 import datetime
-import plistlib
-import sys
 import platform
 import argparse
 from bcfind.utils import mkdir_p

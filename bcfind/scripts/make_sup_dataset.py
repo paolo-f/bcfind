@@ -10,14 +10,16 @@ import progressbar as pb
 
 from bcfind import volume
 from scipy.spatial import cKDTree
-import scipy.ndimage.filters as filters
+# import scipy.ndimage.filters as filters
 from bcfind.semadec import imtensor
 from bcfind.semadec import gfilter  # extracted from the bleeding edge version of scipy
+
 
 def inside_margin(c, substack):
     """ Are we inside the safe region?"""
     m = substack.plist['Margin']/2
     return min(c.x-m,c.y-m,c.z-m,substack.info['Width']-m-c.x,substack.info['Height']-m-c.y,substack.info['Depth']-m-c.z)
+
 
 def make_dataset(tensorimage, ss, C, L=12, size=None, save_tiff_files=False, negatives=False, margin=None):
     hf5 = tables.openFile(tensorimage, 'r')
@@ -33,7 +35,7 @@ def make_dataset(tensorimage, ss, C, L=12, size=None, save_tiff_files=False, neg
     y = []
     patchlen = (1+2*size)**3
     print('Preparing..')
-    kdtree=cKDTree(np.array([[c.x,c.y,c.z] for c in C]))
+    kdtree = cKDTree(np.array([[c.x,c.y,c.z] for c in C]))
     nrej_intensity = 0
     nrej_near = 0
     target_tensor_3d = np.zeros(np_tensor_3d.shape)
@@ -62,12 +64,12 @@ def make_dataset(tensorimage, ss, C, L=12, size=None, save_tiff_files=False, neg
             for x0 in range(c.x-L,c.x+L+1,3):
                 for y0 in range(c.y-L,c.y+L+1,3):
                     for z0 in range(c.z-L,c.z+L+1,3):
-                        if np.random.rand(1)[0] > 0: # 0.5: #0.8:
+                        if np.random.rand(1)[0] > 0:  # 0.5: #0.8:
                             patch = np_tensor_3d[z0-size:z0+size+1,y0-size:y0+size+1,x0-size:x0+size+1]
                             X.append(np.reshape(patch, (patchlen,)))
                             ypatch = target_tensor_3d[z0-size:z0+size+1,y0-size:y0+size+1,x0-size:x0+size+1]
                             y.append(np.reshape(ypatch, (patchlen,)))
-                            n_neg += 1 # Sample as many negatives as positives
+                            n_neg += 1  # Sample as many negatives as positives
             if negatives:
                 while n_neg > 0:
                     g = [margin/2,margin/2,margin/2] + np.random.rand(3) * [D-margin,H-margin,W-margin]
@@ -75,7 +77,7 @@ def make_dataset(tensorimage, ss, C, L=12, size=None, save_tiff_files=False, neg
                     nbrs = kdtree.query_ball_point(g, r=30)
                     if len(nbrs) == 0:
                         patch = np_tensor_3d[g[0]-size:g[0]+size+1,g[1]-size:g[1]+size+1,g[2]-size:g[2]+size+1]
-                        if np.mean(patch) > 10: #or np.random.rand(1)[0] > 0.95:
+                        if np.mean(patch) > 10:  # or np.random.rand(1)[0] > 0.95:
                             X.append(np.reshape(patch, (patchlen,)))
                             ypatch = target_tensor_3d[z0-size:z0+size+1,y0-size:y0+size+1,x0-size:x0+size+1]
                             y.append(np.reshape(ypatch, (patchlen,)))

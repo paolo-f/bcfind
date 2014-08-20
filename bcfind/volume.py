@@ -64,14 +64,14 @@ class Center(object):
     def __str__(self):
         if self.volume != 0:
             s = 'm=%.1f\tv=%.2f\tr=%.2f\thue=%.2f' % (self.mass,
-                                                  self.volume,
-                                                  float(self.mass)/float(self.volume),
-                                                  self.hue)
+                                                      self.volume,
+                                                      float(self.mass)/float(self.volume),
+                                                      self.hue)
         else:
             s = 'm=%.1f\tv=%.2f\tr=%.2f\thue=%.2f' % (self.mass,
-                                                  self.volume,
-                                                  0.0,
-                                                  self.hue)
+                                                      self.volume,
+                                                      0.0,
+                                                      self.hue)
         if hasattr(self, 'distances'):
             s = s + '\t' + ':'.join(['%.1f' % d for d in self.distances])
         if hasattr(self, 'EVR'):
@@ -126,7 +126,7 @@ class ImageSaver(object):
         # If we have minizinc then create a knn graph and run a constraint program to colorize nicely
         edges = []
         X = np.array([[c.x, c.y, c.z] for c in C])
-        kdtree=cKDTree(X)
+        kdtree = cKDTree(X)
         purkinje_radius = 16
         for c in C:
             distances, neighbors = kdtree.query([c.x, c.y, c.z], n_neighbors)
@@ -134,7 +134,7 @@ class ImageSaver(object):
                 if d < 3*purkinje_radius and c.index < C[n].index:
                     edges.append([c.index, C[n].index])
 
-        if len(edges) < 1000: # otherwise solving the constraint program might be too costly
+        if len(edges) < 1000:  # otherwise solving the constraint program might be too costly
             with open(self.savedir+'/'+'/edges.dzn', 'w') as ostream:
                 print('n=%d;' % len(C), file=ostream)
                 print('num_edges=%d;' % len(edges), file=ostream)
@@ -234,7 +234,7 @@ class ImageSaver(object):
             for i in xrange(w):
                 for j in xrange(h):
                     if thresholds:
-                        opix[i, j] = (self.substack.pixels[z][i,j], 0, 0) # Red
+                        opix[i, j] = (self.substack.pixels[z][i,j], 0, 0)  # Red
                     else:
                         opix[i, j] = 0
             opixels.append(opix)
@@ -242,10 +242,10 @@ class ImageSaver(object):
         if thresholds:
             for i in xrange(len(Lx)):
                 val = pixels[Lz[i]][Lx[i], Ly[i]]
-                if val < thresholds[1]: # Note: since it's on the lists Lx,Ly,Lz, it's already above thresholds[0]!
-                    opixels[Lz[i]][Lx[i], Ly[i]] = (0,val,0) # Green
+                if val < thresholds[1]:  # Note: since it's on the lists Lx,Ly,Lz, it's already above thresholds[0]!
+                    opixels[Lz[i]][Lx[i], Ly[i]] = (0,val,0)  # Green
                 else:
-                    opixels[Lz[i]][Lx[i], Ly[i]] = (val,val,0) # Yellow
+                    opixels[Lz[i]][Lx[i], Ly[i]] = (val,val,0)  # Yellow
         else:
             for i in xrange(len(Lx)):
                 opixels[Lz[i]][Lx[i], Ly[i]] = (pixels[Lz[i]][Lx[i], Ly[i]],
@@ -294,7 +294,7 @@ class SubStack(object):
     plist : object, optional
         Use passed object instead of the info.json (or info.plist) file in indir
     """
-    def __init__(self, indir, substack_id, plist = None):
+    def __init__(self, indir, substack_id, plist=None):
         if not os.path.isdir(indir+'/'+substack_id):
             raise Exception('Substack', substack_id, 'not found in', indir)
         if plist is None:
@@ -314,8 +314,6 @@ class SubStack(object):
         self.info = self.plist['SubStacks'][substack_id]
         self.parent = {'Height':self.plist['Height'], 'Width':self.plist['Width'], 'Depth':self.plist['Depth']}
 
-
-
     def load_volume_from_h5(self,h5filename):
         """
         Load the volume from an HDF5 file
@@ -332,7 +330,6 @@ class SubStack(object):
             self.imgs.append(img_z)
             self.pixels.append(img_z.load())
         tee.log(z, 'images read into stack (from h5 file)')
-
 
     def load_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None):
         """Loads a sequence of images into a stack
@@ -376,11 +373,9 @@ class SubStack(object):
                 tee.log('.', end='')
         tee.log(z, 'images read into stack')
 
-
-
     def neighbors_graph(self, C):
         X = np.array([[c.x, c.y, c.z] for c in C])
-        kdtree=cKDTree(X)
+        kdtree = cKDTree(X)
         for c in C:
             distances, neighbors = kdtree.query([c.x, c.y, c.z], 6)
             c.distances = sorted(distances)[1:]
@@ -418,16 +413,15 @@ class SubStack(object):
             print(','.join(map(str, [1+cx, 1+cy, 1+cz, radius, shape, c.name, comment, r, g, b])), file=ostream)
         ostream.close()
 
-
     def load_markers(self, filename, from_vaa3d=False, check_coords=True):
         data = pd.read_csv(filename, skipinitialspace=True, na_filter=False)
-        if '#x' in data.keys(): # fix some Vaa3d garbage
+        if '#x' in data.keys():  # fix some Vaa3d garbage
             data.rename(columns={'#x': 'x'}, inplace=True)
-        if '##x' in data.keys(): # fix some Vaa3d garbage
+        if '##x' in data.keys():  # fix some Vaa3d garbage
             data.rename(columns={'##x': 'x'}, inplace=True)
         C = []
         for i in data.index:
-            row=data.ix[i]
+            row = data.ix[i]
             c = Center(0, 0, 0)
             for k in row.keys():
                 setattr(c,k,row[k])
@@ -436,7 +430,7 @@ class SubStack(object):
             if from_vaa3d:
                 if c.name == '':
                     c.name = 'landmark %d' % (i+1)
-            else: # from predictor..
+            else:  # from predictor..
                 try:
                     c.volume = float(c.comment.split('v=')[1].split()[0])
                     c.mass = float(c.comment.split('m=')[1].split()[0])
@@ -452,7 +446,7 @@ class SubStack(object):
                         except ValueError:
                             pass
                 except IndexError:
-                    print('Warning: comment string unformatted (%s), is this really a predicted marker file?'%c.comment)
+                    print('Warning: comment string unformatted (%s), is this really a predicted marker file?' % c.comment)
             C.append(c)
         return C
 

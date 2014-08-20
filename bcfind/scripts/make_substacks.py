@@ -13,7 +13,6 @@ A dictionary summarizing the performed split is saved in
 from __future__ import print_function
 import argparse
 import json
-import sys
 import os
 import subprocess
 import Image
@@ -21,13 +20,14 @@ import uuid
 
 from bcfind.utils import mkdir_p
 
+
 def main(args):
     """
     Files must be numbered consecutively.
     """
-    prefix=None
-    convert_to_gray=True
-    verbose=True
+    prefix = None
+    convert_to_gray = True
+    verbose = True
 
     savewd = os.getcwd()
     os.chdir(args.indir)
@@ -129,6 +129,7 @@ def main(args):
                 Full_Path_Of_Substacks=full_path_of_substacks)
     with open(full_path_of_substacks+'/info.json', 'w') as ostream:
         print(json.dumps(info), file=ostream)
+
 
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,

@@ -7,7 +7,7 @@ import math
 import numpy
 from scipy.ndimage import _ni_support
 from scipy.ndimage import _nd_image
-from scipy.misc import doccer
+
 
 def correlate1d(input, weights, axis=-1, output=None, mode="reflect",
                 cval=0.0, origin=0):
@@ -37,8 +37,7 @@ def correlate1d(input, weights, axis=-1, output=None, mode="reflect",
     if not weights.flags.contiguous:
         weights = weights.copy()
     axis = _ni_support._check_axis(axis, input.ndim)
-    if ((len(weights) // 2 + origin < 0) or
-        (len(weights) // 2 + origin > len(weights))):
+    if ((len(weights) // 2 + origin < 0) or (len(weights) // 2 + origin > len(weights))):
         raise ValueError('invalid origin')
     mode = _ni_support._extend_mode_to_code(mode)
     _nd_image.correlate1d(input, weights, axis, output, mode, cval,
@@ -146,8 +145,9 @@ def gaussian_filter1d(input, sigma, axis=-1, order=0, output=None,
             weights[lw - ii] = tmp
     return correlate1d(input, weights, axis, output, mode, cval, 0)
 
+
 def gaussian_filter(input, sigma, order=0, output=None,
-                  mode="reflect", cval=0.0, truncate=4.0):
+                    mode="reflect", cval=0.0, truncate=4.0):
     """Multidimensional Gaussian filter.
 
     Parameters
@@ -194,8 +194,7 @@ def gaussian_filter(input, sigma, order=0, output=None,
         raise ValueError('Order outside 0..4 not implemented')
     sigmas = _ni_support._normalize_sequence(sigma, input.ndim)
     axes = list(range(input.ndim))
-    axes = [(axes[ii], sigmas[ii], orders[ii])
-                        for ii in range(len(axes)) if sigmas[ii] > 1e-15]
+    axes = [(axes[ii], sigmas[ii], orders[ii]) for ii in range(len(axes)) if sigmas[ii] > 1e-15]
     if len(axes) > 0:
         for axis, sigma, order in axes:
             gaussian_filter1d(input, sigma, axis, order, output,
@@ -204,5 +203,3 @@ def gaussian_filter(input, sigma, order=0, output=None,
     else:
         output[...] = input[...]
     return return_value
-
-

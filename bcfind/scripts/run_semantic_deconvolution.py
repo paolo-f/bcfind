@@ -11,13 +11,14 @@ from bcfind.volume import SubStack
 from bcfind.semadec import imtensor
 from bcfind.semadec import deconvolver
 
+
 def main(args):
     substack = SubStack(args.indir,args.substack_id)
     np_tensor_3d, minz = imtensor.load_nearby(args.tensorimage, substack, args.extramargin)
 
     # Standardize volume according to mean and std found in the training set
     print('Reading standardization data from', args.trainfile)
-    h5=tables.openFile(args.trainfile)
+    h5 = tables.openFile(args.trainfile)
     Xmean = h5.root.Xmean[:]
     Xstd = h5.root.Xstd[:]
     h5.close()
@@ -33,7 +34,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description="""
     Preprocess a substack using a neural network model
     """, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    
+
     parser.add_argument('indir', metavar='indir', type=str,
                         help='needs indir/info.json, substacks, e.g. indir/000, and ground truth, e.g. indir/000-GT.marker')
     parser.add_argument('substack_id', metavar='substack_id', type=str,
