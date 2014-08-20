@@ -161,7 +161,8 @@ class ImageSaver(object):
     def save_vaa3d(self, C, Lx, Ly, Lz, Lcluster,
                    draw_centers=True,
                    colorize_voxels=True,
-                   trajectories=None):
+                   trajectories=None,
+                   floating_point=False):
         """
         save_vaa3d(C, Lx, Ly, Lz, Lcluster,
                    draw_centers=True, colorize_voxels=True, trajectories=None)
@@ -183,6 +184,8 @@ class ImageSaver(object):
             Should we paint voxels in colors?
         trajectories : list or None, optional
             If not None, draw mean shift trajectories for every seed
+        floating_point: bool, optional
+            If true, save coordinates in floating point, else round to int
         """
         out_imgs = []
         opixels = []
@@ -217,7 +220,7 @@ class ImageSaver(object):
             out_img.save(iter_dir+'/'+self.substack.info['Files'][z].split('/')[-1])
             w, h = out_img.size
         # ---------- marker file used by vaa3d
-        self.substack.save_markers('%s/%s.marker' % (self.savedir, save_name), C)
+        self.substack.save_markers('%s/%s.marker' % (self.savedir, save_name), C, floating_point)
 
     def save_above_threshold(self, Lx, Ly, Lz, thresholds=None):
         out_imgs = []
@@ -383,7 +386,7 @@ class SubStack(object):
             c.distances = sorted(distances)[1:]
 
     @save_markers_timer.timed
-    def save_markers(self, filename, C, round_to_int=True):
+    def save_markers(self, filename, C, floating_point=False):
         """save_markers(filename, C)
 
         Save markers to a Vaa3D readable file.
@@ -394,8 +397,8 @@ class SubStack(object):
             Name of the file where markers are saved
         C : list
             List of :class:`Center` objects
-        round_to_int: bool, optional
-            If true, round coordinates to the closest int values before saving
+        floating_point: bool
+            If true, save coordinates in floating point, else round to int
         """
         if len(C) == 0:  # might happen when logging deletions as marker files
             return
@@ -407,10 +410,10 @@ class SubStack(object):
             r, g, b = hi2rgb[int(255*c.hue)][156]
             radius = 0
             shape = 1
-            if round_to_int:
-                cx, cy, cz = int(round(c.x)), int(round(c.y)), int(round(c.z))
-            else:
+            if floating_point:
                 cx, cy, cz = c.x, c.y, c.z
+            else:
+                cx, cy, cz = int(round(c.x)), int(round(c.y)), int(round(c.z))
             comment = str(c)
             print(','.join(map(str, [1+cx, 1+cy, 1+cz, radius, shape, c.name, comment, r, g, b])), file=ostream)
         ostream.close()

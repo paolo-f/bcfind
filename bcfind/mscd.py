@@ -68,7 +68,7 @@ def mean_shift(X, intensities=None, bandwidth=None, seeds=None,
     Implementation taken from scikit-learn with two minor variants:
 
         - Use (by default) scipy KD-trees, which are faster in our case
-        - weigthed version of mean-shift using `intensities` as 
+        - weigthed version of mean-shift using `intensities` as
           weights (i.e., we compute centers of mass rather than means)
 
     Parameters
@@ -87,7 +87,7 @@ def mean_shift(X, intensities=None, bandwidth=None, seeds=None,
         Point used as initial kernel locations.
 
     use_scipy : bool
-        If true use cKDTree from scipy.spatial, otherwise 
+        If true use cKDTree from scipy.spatial, otherwise
         use NearestNeighbors from sklearn.neighbors
 
     Returns
@@ -216,95 +216,66 @@ def ms(substack, args):
         - args.outdir: directory where results are saved
         - args.hi_local_max_radius: radius of the sphere used to decide whether a local maximum should be a seed
         - args.mean_shift_bandwidth: bandwidth for the mean shift algorithm
+        - args.floating_point: bool, whether cell coordinates should be saved in floating point
     """
-    L = []
-    intensities = []
     Depth = substack.info['Depth']
     Width = substack.info['Width']
     Height = substack.info['Height']
+    patch = np.zeros((Width,Height,Depth))
+    for z in range(Depth):
+        patch[:, :, z] = np.array(substack.imgs[z]).T
 
-    histogram = substack.histogram()
-    thresholds = threshold.multi_kapur(histogram, 2)
-    tee.log('Maximum entropy discretization (Kapur et al. 1985, 3 bins):', thresholds)
-    minint = thresholds[0]
-    min_mass = minint*27
-    if minint <= 1:
-        tee.log('minint threshold too low (%d) - I believe there are no cells in this substack' % minint)
-        substack.save_markers(args.outdir+'/'+substack.substack_id+'/ms.marker', [])
-        return
-    if thresholds[1] <= 15:
-        tee.log('thresholds[1] threshold too low (%d) - I believe there are no cells in this substack' % thresholds[1])
-        substack.save_markers(args.outdir+'/'+substack.substack_id+'/ms.marker', [])
-        return
+    cluster_centers = np.zeros((0,3))
+    cluster_masses = np.zeros(0)
+    L = np.zeros((0,3))
+    labels = np.zeros(0)
+    seeds = []
 
-    for z in xrange(Depth):
-        ss = substack.pixels[z]
-        for x in xrange(Width):
-            for y in xrange(Height):
-                if ss[x, y] > minint:
-                    L.append([x, y, z])
-                    intensities.append(ss[x, y])
+    rval = _patch_ms(patch, args)
+    if rval is not None:
+        cluster_centers = rval.cluster_centers
+        cluster_masses = rval.masses
+        labels = rval.labels+len(rval.cluster_centers)
+        L = rval.L
+        seeds.extend(rval.seeds)
 
-    tee.log('Found', len(L), 'voxels above the threshold', minint)
-    if len(L) < 10:
-        tee.log('Too few points (%d) - I believe there are no cells in this substack' % len(L))
-        substack.save_markers(args.outdir+'/'+substack.substack_id+'/ms.marker', [])
+    if len(cluster_centers) == 0:
+        print("Warning: No centers found")
         return
 
-    L = np.array(L)
-    intensities = np.array(intensities)
-    bandwidth = args.mean_shift_bandwidth
+    masses_mean = np.mean(cluster_masses)
+    masses_std = np.std(cluster_masses)
 
-    C = [volume.Center(L[i][0], L[i][1], L[i][2]) for i in xrange(len(L)) if
-         is_local_max(int(round(L[i][0])), int(round(L[i][1])), int(round(L[i][2])),
-                      substack.pixels, Width, Height, Depth, min_mass)]
-    if len(C) > 80000:
-        tee.log('Too many candidates,', len(C), 'I believe this substack is messy and give up')
-        return
-    seeds = np.array([[c.x, c.y, c.z] for c in C])
-    for c in C:
-        c.name = 'seed'
-    substack.save_markers(args.outdir+'/'+substack.substack_id+'/seeds.marker', C)
-
-    Lx = [int(round(l[0])) for l in L]
-    Ly = [int(round(l[1])) for l in L]
-    Lz = [int(round(l[2])) for l in L]
-
-    cluster_centers, labels, volumes, masses, trajectories = mean_shift(L, intensities=intensities,
-                                                                        bandwidth=bandwidth, seeds=seeds)
-    if cluster_centers is None:
-        return
-    labels_unique = np.unique(labels)
-    n_clusters_ = len(labels_unique)
-    tee.log("number of estimated clusters : %d" % n_clusters_)
     C = []
     for i, cc in enumerate(cluster_centers):
-        tee.log(i, cc)
         c = volume.Center(cc[0], cc[1], cc[2])
         c.name = 'MS_center %d' % i
-        c.volume = float(volumes[i])
-        c.mass = float(masses[i])
+        c.volume = (cluster_masses[i]-masses_mean)/masses_std
+        c.mass = cluster_masses[i]
         C.append(c)
+        tee.log(i, cc, c)
 
-    Lcluster = [C[labels[i]] for i in xrange(len(L))]
-
-    _pca_analysis(Lx, Ly, Lz, Lcluster, C)
-    # _wpca_analysis(L, C, intensities)
-    _finalize_masses(L, C, intensities)
-    # _finalize_radii(Lx, Ly, Lz, Lcluster, C)
     filename = args.outdir+'/'+substack.substack_id+'/ms.marker'
-    substack.save_markers(filename, C)
+    substack.save_markers(filename, C, floating_point=args.floating_point)
     tee.log('Markers saved to', filename)
+    filename = args.outdir+'/'+substack.substack_id+'/seeds.marker'
+    substack.save_markers(filename, seeds)
+    tee.log(len(seeds), 'seeds saved to', filename)
+
     if args.save_image:
         image_saver = volume.ImageSaver(args.outdir, substack, C)
-        image_saver.save_above_threshold(Lx, Ly, Lz, thresholds)
+        Lx = [int(x) for x in L[:,0]]
+        Ly = [int(y) for y in L[:,1]]
+        Lz = [int(z) for z in L[:,2]]
+        image_saver.save_above_threshold(Lx, Ly, Lz)
+        Lcluster = [C[int(labels[i])] for i in xrange(len(L))]
+        # Note: no trajectories in this case
         image_saver.save_vaa3d(C, Lx, Ly, Lz, Lcluster,
                                draw_centers=True, colorize_voxels=True,
-                               trajectories=trajectories)
+                               floating_point=args.floating_point)
         tee.log('Debugging images saved in', args.outdir)
     else:
         tee.log('Debugging images not saved')
-
 
 @patch_ms_timer.timed
 def _patch_ms(patch, args):
@@ -324,7 +295,7 @@ def _patch_ms(patch, args):
         return None
 
     (Lx,Ly,Lz) = np.where(patch > minint)
-    
+
     intensities = patch[(Lx,Ly,Lz)]
     L=np.array(zip(Lx,Ly,Lz), dtype=np.uint16)
     tee.log('Found', len(L), 'voxels above the threshold', minint)
@@ -348,7 +319,7 @@ def _patch_ms(patch, args):
         tee.log('Too many candidates,', np.sum(himaxima), 'I believe this substack is messy and give up')
         return None
     C = [volume.Center(x,y,z) for (x,y,z) in zip(*np.where(himaxima))]
-    
+
     if len(C) == 0:
         tee.log('No maxima above. #himaxima=', np.sum(himaxima), '#above=', np.sum(above), '. Giving up')
         return None
@@ -371,7 +342,7 @@ def _patch_ms(patch, args):
                    labels=labels, masses=masses, L=L, seeds=C)
     return r
 
-    
+
 def pms(substack, args):
     """Find cells using mean shift.
 
@@ -387,6 +358,7 @@ def pms(substack, args):
         - args.outdir: directory where results are saved
         - args.hi_local_max_radius: radius of the sphere used to decide whether a local maximum should be a seed
         - args.mean_shift_bandwidth: bandwidth for the mean shift algorithm
+        - args.floating_point: bool, whether cell coordinates should be rounded before saving
     """
     D = substack.info['Depth']
     W = substack.info['Width']
@@ -428,6 +400,7 @@ def pms(substack, args):
         sorted_masses = cluster_masses[indices]
         # sorted_volumes = volumes[indices]
         unique = np.ones(len(sorted_centers), dtype=np.bool)
+        # FIXME - make it a parameter
         nbrs = NearestNeighbors(radius=5.5).fit(sorted_centers)
         for i, center in enumerate(sorted_centers):
             if unique[i]:
@@ -448,9 +421,9 @@ def pms(substack, args):
         c.mass = masses[i]
         tee.log(i, cc, c)
         C.append(c)
-    
+
     filename = args.outdir+'/'+substack.substack_id+'/ms.marker'
-    substack.save_markers(filename, C)
+    substack.save_markers(filename, C, floating_point=args.floating_point)
     tee.log('Markers saved to', filename)
     filename = args.outdir+'/'+substack.substack_id+'/seeds.marker'
     substack.save_markers(args.outdir+'/'+substack.substack_id+'/seeds.marker', seeds)
@@ -462,11 +435,15 @@ def pms(substack, args):
         Ly = [int(y) for y in L[:,1]]
         Lz = [int(z) for z in L[:,2]]
         image_saver.save_above_threshold(Lx,Ly,Lz)
+        print(len(C),max(labels),min(labels))
+
+
         Lcluster = [C[int(labels[i])] for i in xrange(len(L))]
         # Note: no trajectories in this case
         image_saver.save_vaa3d(C, Lx, Ly, Lz, Lcluster,
                                draw_centers=True,
-                               colorize_voxels=True)
+                               colorize_voxels=True,
+                               floating_point=args.floating_point)
         tee.log('Debugging images saved in', args.outdir)
     else:
         tee.log('Debugging images not saved')

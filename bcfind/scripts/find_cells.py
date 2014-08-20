@@ -56,7 +56,7 @@ def get_parser():
                         Will be created or overwritten""")
     parser.add_argument('--local', dest='local', action='store_true',
                         help='Perform local processing by dividing the volume in 8 parts.')
-    parser.set_defaults(local=True)
+    # parser.set_defaults(local=True)
     parser.add_argument('--hi_local_max_radius', metavar='hi_local_max_radius', dest='hi_local_max_radius',
                         action='store', type=float, default=6,
                         help='Radius of the seed selection ball (r)')
@@ -65,6 +65,8 @@ def get_parser():
                         help='Radius of the mean shift kernel (R)')
     parser.add_argument('--save_image', dest='save_image', action='store_true',
                         help='Save debugging substack for visual inspection (voxels above threshold and colorized clusters).')
+    parser.add_argument('--floating_point', dest='floating_point', action='store_true',
+                        help='If true, cell centers are saved in floating point.')
     parser.add_argument('--min_second_threshold', metavar='min_second_threshold', dest='min_second_threshold',
                         action='store', type=int, default=15,
                         help="""If the foreground (second threshold in multi-Kapur) is below this value
