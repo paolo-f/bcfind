@@ -52,13 +52,13 @@ def get_parser():
     parser.add_argument('outdir', metavar='outdir', type=str,
                         help="""Directory where prediction results will be saved, e.g. outdir/100905/ms.marker.
                         Will be created or overwritten""")
-    parser.add_argument('--local', dest='local', action='store_true',
+    parser.add_argument('-l', '--local', dest='local', action='store_true',
                         help='Perform local processing by dividing the volume in 8 parts.')
     # parser.set_defaults(local=True)
-    parser.add_argument('--hi_local_max_radius', metavar='hi_local_max_radius', dest='hi_local_max_radius',
+    parser.add_argument('-r', '--hi_local_max_radius', metavar='r', dest='hi_local_max_radius',
                         action='store', type=float, default=6,
                         help='Radius of the seed selection ball (r)')
-    parser.add_argument('--mean_shift_bandwidth', metavar='mean_shift_bandwidth', dest='mean_shift_bandwidth',
+    parser.add_argument('-R', '--mean_shift_bandwidth', metavar='R', dest='mean_shift_bandwidth',
                         action='store', type=float, default=5.5,
                         help='Radius of the mean shift kernel (R)')
     parser.add_argument('--save_image', dest='save_image', action='store_true',
@@ -76,4 +76,3 @@ if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
     main(args)
-

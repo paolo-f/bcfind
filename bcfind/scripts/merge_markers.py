@@ -78,7 +78,7 @@ def get_parser():
                         """)
     parser.add_argument('outfile', metavar='outfile', type=str,
                         help='where to save the merged .marker file, e.g. merged.marker')
-    parser.add_argument('--verbose', dest='verbose', action='store_true', help='Verbose output.')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Verbose output.')
     parser.set_defaults(verbose=False)
     return parser
 

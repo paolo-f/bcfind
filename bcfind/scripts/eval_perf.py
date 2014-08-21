@@ -320,7 +320,7 @@ def get_parser():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('indir', metavar='indir', type=str,
-                        help="""needs indir/info.plist, substacks, e.g. indir/100905, 
+                        help="""needs indir/info.plist, substacks, e.g. indir/100905,
                         and GT files e.g. indir/100905-GT.marker (unless a different folder
                         is specified with the --ground_truth_folder option)""")
     parser.add_argument('substack_id', metavar='substack_id', type=str,
@@ -329,14 +329,14 @@ def get_parser():
                         help="""where prediction results were saved, e.g. outdir/100905/ms.marker.
                         Errors are saved in outdir/100905/errors.marker
                         """)
-    parser.add_argument('--max_cell_diameter', dest='max_cell_diameter', type=float, default=16.0,
+    parser.add_argument('-D', '--max_cell_diameter', dest='max_cell_diameter', type=float, default=16.0,
                         help='Maximum diameter of a cell')
-    parser.add_argument('--manifold-distance', dest='manifold_distance', type=float, default=None,
+    parser.add_argument('-d', '--manifold-distance', dest='manifold_distance', type=float, default=None,
                         help='Maximum distance from estimated manifold to be included as a prediction')
-    parser.add_argument('--curve', dest='curve', action='store_true', help='Make a recall-precision curve.')
-    parser.add_argument('--ground_truth_folder', dest='ground_truth_folder', type=str, default=None,
+    parser.add_argument('-c', '--curve', dest='curve', action='store_true', help='Make a recall-precision curve.')
+    parser.add_argument('-g', '--ground_truth_folder', dest='ground_truth_folder', type=str, default=None,
                         help='folder containing merged marker files (for multiview images)')
-    parser.add_argument('--verbose', dest='verbose', action='store_true', help='Verbose output.')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Verbose output.')
     return parser
 
 

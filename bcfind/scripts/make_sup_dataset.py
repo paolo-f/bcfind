@@ -140,18 +140,18 @@ def main(args):
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('indir', metavar='indir', type=str,
+    parser.add_argument('indir', dest='indir', type=str,
                         help='needs indir/info.json, substacks, e.g. indir/000, and ground truth, e.g. indir/000-GT.marker')
-    parser.add_argument('tensorimage', metavar='tensorimage', type=str,
+    parser.add_argument('tensorimage', dest='tensorimage', type=str,
                         help='HDF5 file containing the whole stack')
-    parser.add_argument('outfile', metavar='outfile', type=str,
+    parser.add_argument('outfile', dest='outfile', type=str,
                         help='Name of the HDF5 file where results will be saved')
-    parser.add_argument('substack_id', metavar='substack_id', type=str, nargs='+',
+    parser.add_argument('substack_id', dest='substack_id', type=str, nargs='+',
                         help='substack identifier, e.g. 010608')
-    parser.add_argument('--size', metavar='size', dest='size',
+    parser.add_argument('-s', '--size', dest='size', dest='size',
                         action='store', type=int, default=6,
                         help='Input and output patches are cubes of side (2*size+1)**3')
-    parser.add_argument('--margin', dest='margin', type=int, default=40, help='Overlap between adjacent substacks')
+    parser.add_argument('-m', '--margin', dest='margin', type=int, default=40, help='Overlap between adjacent substacks')
     parser.add_argument('--negatives', dest='negatives', action='store_true', help='include "negative" (non cell) examples.')
     parser.add_argument('--no-negatives', dest='negatives', action='store_false', help='Include only cell examples.')
     parser.set_defaults(negatives=False)

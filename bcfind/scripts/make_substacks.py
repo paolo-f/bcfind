@@ -134,14 +134,14 @@ def main(args):
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('indir', metavar='indir', type=str,
+    parser.add_argument('indir', dest='indir', type=str,
                         help='Directory contaning the source stack (sequence of TIFF files)')
-    parser.add_argument('nx', metavar='nx', type=int, help='# of substacks along the X dimension')
-    parser.add_argument('ny', metavar='ny', type=int, help='# of substacks along the Y dimension')
-    parser.add_argument('nz', metavar='nz', type=int, help='# of substacks along the Z dimension')
-    parser.add_argument('--suffix', dest='suffix', type=str, default='.tif', help='Image file suffix')
-    parser.add_argument('--margin', dest='margin', type=int, default=40, help='Overlap between adjacent substacks')
-    parser.add_argument('--verbose', dest='verbose', action='store_true', help='Verbose output.')
+    parser.add_argument('nx', dest='nx', type=int, help='# of substacks along the X dimension')
+    parser.add_argument('ny', dest='ny', type=int, help='# of substacks along the Y dimension')
+    parser.add_argument('nz', dest='nz', type=int, help='# of substacks along the Z dimension')
+    parser.add_argument('-s', '--suffix', dest='suffix', type=str, default='.tif', help='Image file suffix')
+    parser.add_argument('-m', '--margin', dest='margin', type=int, default=40, help='Overlap between adjacent substacks')
+    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Verbose output.')
     parser.set_defaults(verbose=False)
     return parser
 
