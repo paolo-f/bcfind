@@ -320,7 +320,9 @@ def get_parser():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('indir', metavar='indir', type=str,
-                        help='needs indir/info.plist, substacks, e.g. indir/100905, and GT files e.g. indir/100905-GT.marker')
+                        help="""needs indir/info.plist, substacks, e.g. indir/100905, 
+                        and GT files e.g. indir/100905-GT.marker (unless a different folder
+                        is specified with the --ground_truth_folder option)""")
     parser.add_argument('substack_id', metavar='substack_id', type=str,
                         help='substack identifier, e.g. 100905')
     parser.add_argument('outdir', metavar='outdir', type=str,
@@ -332,19 +334,17 @@ def get_parser():
     parser.add_argument('--manifold-distance', dest='manifold_distance', type=float, default=None,
                         help='Maximum distance from estimated manifold to be included as a prediction')
     parser.add_argument('--curve', dest='curve', action='store_true', help='Make a recall-precision curve.')
-    parser.add_argument('--verbose', dest='verbose', action='store_true', help='Verbose output.')
-    parser.add_argument('--merged_markers_folder', metavar='merged_markers_folder', dest='merged_markers_folder',
-                        action='store', type=str, default=None,
+    parser.add_argument('--ground_truth_folder', dest='ground_truth_folder', type=str, default=None,
                         help='folder containing merged marker files (for multiview images)')
-    parser.set_defaults(verbose=False)
+    parser.add_argument('--verbose', dest='verbose', action='store_true', help='Verbose output.')
     return parser
 
 
 def main(args):
     substack = SubStack(args.indir,args.substack_id)
 
-    if args.merged_markers_folder:
-        gt_markers = args.merged_markers_folder+'/'+args.substack_id+'-GT.marker'
+    if args.ground_truth_folder:
+        gt_markers = args.ground_truth_folder+'/'+args.substack_id+'-GT.marker'
     else:
         gt_markers = args.indir+'/'+args.substack_id+'-GT.marker'
 
