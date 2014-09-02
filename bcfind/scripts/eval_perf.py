@@ -6,42 +6,12 @@ from __future__ import print_function
 import matplotlib
 matplotlib.use('Agg')
 import sys
-import math
 import itertools
 import argparse
-import networkx
 import pylab
 
 from bcfind.volume import *
-
-
-def distance((x1,y1,z1),(x2,y2,z2)):
-    return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
-
-
-def make_graph(C_true,C_pred, max_cell_diameter):
-    G = networkx.Graph()
-    node2center = {}
-    for i,c in enumerate(C_true):
-        node = 't_%d' % i
-        G.add_node(node, x=c.x, y=c.y, z=c.z, label=c.name)
-        node2center[node] = c
-    for i,c in enumerate(C_pred):
-        node = 'p_%d' % i
-        G.add_node(node, x=c.x, y=c.y, z=c.z, label=c.name)
-        node2center[node] = c
-    # print("Computing pairwise distances")
-    for ni in [n for n in G.nodes() if n[0] == 't']:
-        for nj in [n for n in G.nodes() if n[0] == 'p']:
-            d = distance((G.node[ni]['x'],G.node[ni]['y'],G.node[ni]['z']),
-                         (G.node[nj]['x'],G.node[nj]['y'],G.node[nj]['z']))
-            if d < 2*max_cell_diameter:
-                w = 1.0/max(0.001,d)
-                G.add_edge(ni,nj,weight=w)
-    print("Solving max weight matching (%d nodes, %d edges)" % (len(G.nodes()), len(G.edges())))
-    mate = networkx.algorithms.matching.max_weight_matching(G,maxcardinality=False)
-    # print("Solved")
-    return G,mate,node2center
+from bcfind.markers import distance, match_markers
 
 
 def inside(c,substack):
@@ -60,7 +30,7 @@ def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_fil
     true_positives_pred = set()  # subset of C_pred that are true positives
     TP = 0
     TP_inside = []
-    G,mate,node2center = make_graph(C_true,C_pred, max_cell_diameter)
+    G,mate,node2center = match_markers(C_true,C_pred, 2*max_cell_diameter)
     kw = 0
     for k1,k2 in mate.iteritems():
         if k1[0] == 'p':  # mate is symmetric
