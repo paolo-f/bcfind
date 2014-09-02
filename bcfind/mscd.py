@@ -22,41 +22,6 @@ ms_timer = timer.Timer('Overall method')
 patch_ms_timer = timer.Timer('Overall method (patch)')
 
 
-def is_local_max(x, y, z, px, ww, hh, dd, min_mass):
-    """
-    Decide if px[x,y] is a local maximum. w and h are image width and
-    height.  Criteria: (1) the intensity of x,y should be higher than
-    all other voxels in a cube of edge length 3 centered around
-    x,y. (2) the sum of intensities in the cube bigger than a
-    threshold.
-    """
-    if x-1 < 0 or x+1 >= ww or y-1 < 0 or y+1 >= hh or z-1 < 0 or z+1 >= dd:
-        return False
-    mass = (px[z][x, y]+px[z][x-1, y-1]+px[z][x, y-1] +
-            px[z][x+1, y-1]+px[z][x-1, y]+px[z][x+1, y] +
-            px[z][x-1, y+1]+px[z][x, y+1]+px[z][x+1, y+1])
-    mass += (px[z+1][x, y]+px[z+1][x-1, y-1]+px[z+1][x, y-1] +
-             px[z+1][x+1, y-1]+px[z+1][x-1, y]+px[z+1][x+1, y] +
-             px[z+1][x-1, y+1]+px[z+1][x, y+1]+px[z+1][x+1, y+1])
-    mass += (px[z-1][x, y]+px[z-1][x-1, y-1]+px[z-1][x, y-1] +
-             px[z-1][x+1, y-1]+px[z-1][x-1, y]+px[z-1][x+1, y] +
-             px[z-1][x-1, y+1]+px[z-1][x, y+1]+px[z-1][x+1, y+1])
-    r = mass > min_mass
-    r = r and (px[z][x, y] >= px[z][x-1, y-1] and px[z][x, y] >= px[z][x, y-1] and
-               px[z][x, y] >= px[z][x+1, y-1] and px[z][x, y] >= px[z][x-1, y] and
-               px[z][x, y] >= px[z][x+1, y] and px[z][x, y] >= px[z][x-1, y+1] and
-               px[z][x, y] >= px[z][x, y+1] and px[z][x, y] >= px[z][x+1, y+1])
-    r = r and (px[z][x, y] >= px[z+1][x-1, y-1] and px[z][x, y] >= px[z+1][x, y-1] and
-               px[z][x, y] >= px[z+1][x+1, y-1] and px[z][x, y] >= px[z+1][x-1, y] and
-               px[z][x, y] >= px[z+1][x+1, y] and px[z][x, y] >= px[z+1][x-1, y+1] and
-               px[z][x, y] >= px[z+1][x, y+1] and px[z][x, y] >= px[z+1][x+1, y+1])
-    r = r and (px[z][x, y] >= px[z-1][x-1, y-1] and px[z][x, y] >= px[z-1][x, y-1] and
-               px[z][x, y] >= px[z-1][x+1, y-1] and px[z][x, y] >= px[z-1][x-1, y] and
-               px[z][x, y] >= px[z-1][x+1, y] and px[z][x, y] >= px[z-1][x-1, y+1] and
-               px[z][x, y] >= px[z-1][x, y+1] and px[z][x, y] >= px[z-1][x+1, y+1])
-    return r
-
-
 @mean_shift_timer.timed
 def mean_shift(X, intensities=None, bandwidth=None, seeds=None,
                cluster_all=True, max_iterations=300, verbose=False, use_scipy=True):
