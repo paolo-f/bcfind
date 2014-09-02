@@ -21,12 +21,47 @@ from .log import tee
 from .utils import mkdir_p, which
 from . import log
 
+
 SHARE_DIR = os.path.dirname(log.__file__)+'/share'
 hi2rgb = pickle.load(open(SHARE_DIR+'/hi2rgb.pickle', 'rb'))
 
 save_vaa3d_timer = timer.Timer('Save Vaa3D')
 save_markers_timer = timer.Timer('Save markers')
 
+def m_load_markers(filename, from_vaa3d=False):
+    data = pd.read_csv(filename, skipinitialspace=True, na_filter=False)
+    if '#x' in data.keys():  # fix some Vaa3d garbage
+        data.rename(columns={'#x': 'x'}, inplace=True)
+    if '##x' in data.keys():  # fix some Vaa3d garbage
+        data.rename(columns={'##x': 'x'}, inplace=True)
+    C = []
+    for i in data.index:
+        row = data.ix[i]
+        c = Center(0, 0, 0)
+        for k in row.keys():
+            setattr(c,k,row[k])
+        if from_vaa3d:
+            if c.name == '':
+                c.name = 'landmark %d' % (i+1)
+        else:  # from predictor..
+            try:
+                c.volume = float(c.comment.split('v=')[1].split()[0])
+                c.mass = float(c.comment.split('m=')[1].split()[0])
+                c.hue = float(c.comment.split('hue=')[1].split()[0])
+                citems = c.comment.split('\t')
+                if len(citems) > 5:
+                    c.EVR = [float(x) for x in citems[5].split(':')]
+                    if len(c.EVR) > 2:
+                        c.last_variance = c.EVR[2]
+                if len(citems) > 6:
+                    try:
+                        c.radius = float(citems[6])
+                    except ValueError:
+                        pass
+            except IndexError:
+                print('Warning: comment string unformatted (%s), is this really a predicted marker file?' % c.comment)
+        C.append(c)
+    return C
 
 class Center(object):
     """Similar to voxel but coordinates are real- instead of integer-valued
@@ -414,40 +449,11 @@ class SubStack(object):
         ostream.close()
 
     def load_markers(self, filename, from_vaa3d=False, check_coords=True):
-        data = pd.read_csv(filename, skipinitialspace=True, na_filter=False)
-        if '#x' in data.keys():  # fix some Vaa3d garbage
-            data.rename(columns={'#x': 'x'}, inplace=True)
-        if '##x' in data.keys():  # fix some Vaa3d garbage
-            data.rename(columns={'##x': 'x'}, inplace=True)
-        C = []
-        for i in data.index:
-            row = data.ix[i]
-            c = Center(0, 0, 0)
-            for k in row.keys():
-                setattr(c,k,row[k])
-            if check_coords and (c.x > self.info['Width'] or c.y > self.info['Height'] or c.z > self.info['Depth']):
-                raise Exception('Coordinates in marker file are out of range', (c.x, c.y, c.z), self.substack_id)
-            if from_vaa3d:
-                if c.name == '':
-                    c.name = 'landmark %d' % (i+1)
-            else:  # from predictor..
-                try:
-                    c.volume = float(c.comment.split('v=')[1].split()[0])
-                    c.mass = float(c.comment.split('m=')[1].split()[0])
-                    c.hue = float(c.comment.split('hue=')[1].split()[0])
-                    citems = c.comment.split('\t')
-                    if len(citems) > 5:
-                        c.EVR = [float(x) for x in citems[5].split(':')]
-                        if len(c.EVR) > 2:
-                            c.last_variance = c.EVR[2]
-                    if len(citems) > 6:
-                        try:
-                            c.radius = float(citems[6])
-                        except ValueError:
-                            pass
-                except IndexError:
-                    print('Warning: comment string unformatted (%s), is this really a predicted marker file?' % c.comment)
-            C.append(c)
+        C = m_load_markers(filename, from_vaa3d)
+        if check_coords:
+            for c in C:
+                if (c.x > self.info['Width'] or c.y > self.info['Height'] or c.z > self.info['Depth']):
+                    raise Exception('Coordinates in marker file are out of range', (c.x, c.y, c.z), self.substack_id)
         return C
 
     def distance_matrix(self, C):
