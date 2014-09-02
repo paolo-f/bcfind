@@ -280,7 +280,7 @@ def _patch_ms(patch, args):
     local_mass = mh.convolve(patch, weights=f, mode='constant', cval=0.0)
     above = local_mass > min_mass
     himaxima = np.logical_and(reg_maxima,above)
-    if np.sum(himaxima) > 10000:
+    if np.sum(himaxima) > args.max_expected_cells:
         tee.log('Too many candidates,', np.sum(himaxima), 'I believe this substack is messy and give up')
         return None
     C = [volume.Center(x,y,z) for (x,y,z) in zip(*np.where(himaxima))]

@@ -61,14 +61,17 @@ def get_parser():
     parser.add_argument('-R', '--mean_shift_bandwidth', metavar='R', dest='mean_shift_bandwidth',
                         action='store', type=float, default=5.5,
                         help='Radius of the mean shift kernel (R)')
-    parser.add_argument('--save_image', dest='save_image', action='store_true',
+    parser.add_argument('-s', '--save_image', dest='save_image', action='store_true',
                         help='Save debugging substack for visual inspection (voxels above threshold and colorized clusters).')
-    parser.add_argument('--floating_point', dest='floating_point', action='store_true',
+    parser.add_argument('-f', '--floating_point', dest='floating_point', action='store_true',
                         help='If true, cell centers are saved in floating point.')
-    parser.add_argument('--min_second_threshold', metavar='min_second_threshold', dest='min_second_threshold',
+    parser.add_argument('-m', '--min_second_threshold', metavar='min_second_threshold', dest='min_second_threshold',
                         action='store', type=int, default=15,
                         help="""If the foreground (second threshold in multi-Kapur) is below this value
                         then the substack is too dark and assumed to contain no soma""")
+    parser.add_argument('-M', '--max_expected_cells', metavar='max_expected_cells', dest='max_expected_cells',
+                        action='store', type=int, default=10000,
+                        help="""Max number of cells that may appear in a substack""")
     parser.set_defaults(save_image=False)
     return parser
 
