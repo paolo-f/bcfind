@@ -1,6 +1,24 @@
 import os
 import errno
 
+class Struct:
+    """Create an instance with argument=value slots.
+    This is for making a lightweight object whose class doesn't matter.
+    Shamelessly taken from R&N 2009 code
+    """
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+    def __cmp__(self, other):
+        if isinstance(other, Struct):
+            return cmp(self.__dict__, other.__dict__)
+        else:
+            return cmp(self.__dict__, other)
+
+    def __repr__(self):
+        args = ['%s=%s' % (k, repr(v)) for (k, v) in vars(self).items()]
+        return 'Struct(%s)' % ', '.join(args)
+
 
 def mkdir_p(path):
     try:
