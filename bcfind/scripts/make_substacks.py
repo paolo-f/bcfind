@@ -18,16 +18,18 @@ import subprocess
 import Image
 import uuid
 
+
+from libtiff import TIFF
+from PIL import Image, TiffImagePlugin
 from bcfind.utils import mkdir_p
 
-
+#@profile
 def main(args):
     """
     Files must be numbered consecutively.
     """
     prefix = None
-    convert_to_gray = True
-    verbose = True
+    #convert_to_grey = True
 
     savewd = os.getcwd()
     os.chdir(args.indir)
@@ -57,6 +59,9 @@ def main(args):
                 raise Exception('OOps, file', image_file, 'has size', img_z.size, 'instead of', (width, height))
     depth = len(zrange)
 
+    print(full_path)
+    full_path_of_substacks = "/".join(full_path.split('/')[:-2]) + '/substacks/' + "/".join(full_path.split('/')[-2:])
+
     print('Volume geometry:', width, height, depth)
     print('Finding substacks')
     substacks = dict()
@@ -64,6 +69,7 @@ def main(args):
     w = int(round(float((width-args.margin))/float(args.nx)))
     h = int(round(float((height-args.margin))/float(args.ny)))
     d = int(round(float((depth-args.margin))/float(args.nz)))
+    print(w,h,d)
     for i in range(args.nx):
         for j in range(args.ny):
             for k in range(args.nz):
@@ -75,48 +81,55 @@ def main(args):
                 z1 = min(depth, z0+d+args.margin)
                 identifier = "%02d%02d%02d" % (i, j, k)
                 substack = dict(Width=x1-x0, Height=y1-y0, Depth=z1-z0, X0=x0, Y0=y0, Z0=z0, Files=[])
-                if verbose:
+                if args.verbose:
                     print('Substack', (i, j, k))
                     print('X:', x0, x1, w)
                     print('Y:', y0, y1, h)
                     print('Z:', z0, z1, d)
                     print('volume:', ((x1-x0)*(y1-y0)*(z1-z0))/1000000.0, 'MVoxels')
                 substacks[identifier] = substack
+                mkdir_p(full_path_of_substacks + '/' + identifier)
 
-    print(full_path)
-    full_path_of_substacks = "/".join(full_path.split('/')[:-2]) + '/substacks/' + "/".join(full_path.split('/')[-2:])
+    num_slices = len(zrange)
     print('Saving cropped image files into', full_path_of_substacks)
     for z_from_zero, z in enumerate(zrange):
         image_file = ('%s_%0'+str(n_digits)+'d'+args.suffix) % (prefix, z)
         img_z = Image.open(full_path+'/'+image_file)
-        if verbose:
+        if args.verbose:
             print(full_path+'/'+image_file, end='')
-#        print('==========',z,'=============')
+        print('==========',z+1,'/',num_slices,'=============')
         for substack_id, substack in substacks.iteritems():
             substack_dir = full_path_of_substacks+'/'+substack_id
-            mkdir_p(substack_dir)
-            X0 = substack['X0']
-            Width = substack['Width']
-            Y0 = substack['Y0']
-            Height = substack['Height']
+            #mkdir_p(substack_dir)
             Z0 = substack['Z0']
             Depth = substack['Depth']
 #            print(substack)
             if z_from_zero in range(Z0, Z0+Depth):
+                X0 = substack['X0']
+                Width = substack['Width']
+                Y0 = substack['Y0']
+                Height = substack['Height']
                 region = img_z.crop((X0+0, Y0+0, X0+Width, Y0+Height))
-                if convert_to_gray:
+                if args.convert_to_grey:
                     region = region.convert('L')
-                if verbose:
+                if args.verbose:
                     print(' ', substack_id, end='')
-                # region.save(substack_dir+'/'+image_file)
-                tmpfile = '/tmp/'+str(uuid.uuid4())+'.tif'
-                region.save(tmpfile)
-                subprocess.call(['tiffcp', '-clzw:2', tmpfile, substack_dir+'/'+image_file])
-                os.unlink(tmpfile)
+                #region.save(substack_dir+'/'+image_file)
+
+                #tmpfile = '/tmp/'+str(uuid.uuid4())+'.tif'
+                #region.save(tmpfile)
+                #subprocess.call(['tiffcp', '-clzw:2', tmpfile, substack_dir+'/'+image_file])
+                #os.unlink(tmpfile)
+
+                tif = TIFF.open(substack_dir+'/'+image_file, mode='w')
+                tif.write_image(region, compression='lzw')
+
+
+
                 # substack['Files'].append(substack_dir+'/'+image_file)
                 # the path to files is now relative
                 substack['Files'].append(substack_id+'/'+image_file)
-        if verbose:
+        if args.verbose:
             print()
 
     print('Saving substack info into', full_path_of_substacks+'/info.json')
@@ -134,17 +147,18 @@ def main(args):
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('indir', dest='indir', type=str,
+    parser.add_argument('indir', type=str,
                         help='Directory contaning the source stack (sequence of TIFF files)')
-    parser.add_argument('nx', dest='nx', type=int, help='# of substacks along the X dimension')
-    parser.add_argument('ny', dest='ny', type=int, help='# of substacks along the Y dimension')
-    parser.add_argument('nz', dest='nz', type=int, help='# of substacks along the Z dimension')
+    parser.add_argument('nx', type=int, help='# of substacks along the X dimension')
+    parser.add_argument('ny', type=int, help='# of substacks along the Y dimension')
+    parser.add_argument('nz', type=int, help='# of substacks along the Z dimension')
     parser.add_argument('-s', '--suffix', dest='suffix', type=str, default='.tif', help='Image file suffix')
     parser.add_argument('-m', '--margin', dest='margin', type=int, default=40, help='Overlap between adjacent substacks')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Verbose output.')
+    parser.add_argument('-c', '--convert_to_grey', dest='convert_to_grey', action='store_true', help='Convert RGB images to greyscale images')
     parser.set_defaults(verbose=False)
+    parser.set_defaults(convert_to_grey=False)
     return parser
-
 
 if __name__ == '__main__':
     parser = get_parser()

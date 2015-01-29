@@ -155,7 +155,7 @@ def filter_volume(np_tensor_3d, Xmean, Xstd,
     print_percentiles(reconstruction, 'reconstruction 8 bit')
     return reconstruction
 
-
+#@profile
 def filter_multiview_volume(Xmean, Xstd, np_tensor_3d_first_view, np_tensor_3d_second_view,
                             extramargin=None, model=None, speedup=None, sparsity_measure_type=None):
 

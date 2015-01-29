@@ -39,7 +39,7 @@ class Lowess:
 
         X : numpy array of shape (n_samples, n_expl_dim)
             explanatory data
-        Y : numpy array of shape (n_samples, n_dep_dim) 
+        Y : numpy array of shape (n_samples, n_dep_dim)
             dependent data
         weights : numpy array of shape (n_samples, n_samples)
             holds the weights for the fitting of each point
@@ -47,7 +47,7 @@ class Lowess:
         Returns
         -------
 
-        ret : numpy array of shape (n_samples, n_dep_dim) 
+        ret : numpy array of shape (n_samples, n_dep_dim)
             holds the fitted data
         """
 
@@ -67,7 +67,56 @@ class Lowess:
                     ret[i, :] = self._fit_point(X, Y, weights, i)
                 except RuntimeError:
                     continue
-        return ret
+        return ret, delta
+
+
+
+
+
+
+
+    def fit_new_points(self, X, Y, X_new, delta, new_weights):
+        """
+        Method that actually fit the points with Lowess regression.
+
+        Parameters
+        ----------
+
+        X : numpy array of shape (n_samples, n_expl_dim)
+            explanatory data
+        Y : numpy array of shape (n_samples, n_dep_dim)
+            dependent data
+        weights : numpy array of shape (n_samples, n_samples)
+            holds the weights for the fitting of each point
+
+        Returns
+        -------
+
+        ret : numpy array of shape (n_samples, n_dep_dim)
+            holds the fitted data
+        """
+
+        n_targets = Y.shape[1]
+        n_new_samples = X_new.shape[0]
+        new_ret = np.zeros((n_new_samples, n_targets))
+        for i in xrange(n_new_samples):
+            point = X_new[i, :]
+            point_weights = new_weights[i, :]
+            indexes = point_weights > self._weight_threshold
+            if np.any(indexes):
+                weights_less = point_weights[indexes]
+                X_less = X[indexes, :]
+                Y_less = Y[indexes, :]
+                X_less, Y_less, X_less_mean, Y_less_mean = self._center_data(X_less, Y_less, weights_less)
+                coef = self._compute_coef(X_less, Y_less)
+                intercept = self._compute_intercept(coef, X_less_mean, Y_less_mean)
+                new_ret[i,:] = np.dot(point, coef) + intercept
+            else:
+                raise RuntimeError('No points have relevant weights')
+
+        return new_ret
+
+
 
     def _compute_delta(self, Y, ret):
         """

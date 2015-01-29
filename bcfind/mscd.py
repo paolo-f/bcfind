@@ -233,11 +233,12 @@ def ms(substack, args):
         Ly = [int(y) for y in L[:,1]]
         Lz = [int(z) for z in L[:,2]]
         image_saver.save_above_threshold(Lx, Ly, Lz)
-        Lcluster = [C[int(labels[i])] for i in xrange(len(L))]
-        # Note: no trajectories in this case
-        image_saver.save_vaa3d(C, Lx, Ly, Lz, Lcluster,
-                               draw_centers=True, colorize_voxels=True,
-                               floating_point=args.floating_point)
+
+        #Lcluster = [C[int(labels[i])] for i in xrange(len(L))]
+        ## Note: no trajectories in this case
+        #image_saver.save_vaa3d(C, Lx, Ly, Lz, Lcluster,
+                               #draw_centers=True, colorize_voxels=True,
+                               #floating_point=args.floating_point)
         tee.log('Debugging images saved in', args.outdir)
     else:
         tee.log('Debugging images not saved')
