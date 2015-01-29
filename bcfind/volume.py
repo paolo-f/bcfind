@@ -63,6 +63,19 @@ def m_load_markers(filename, from_vaa3d=False):
         C.append(c)
     return C
 
+
+def a_load_markers(filename):
+    data = pd.read_csv(filename, skipinitialspace=True, na_filter=False)
+    C = []
+    for i in data.index:
+        row = data.ix[i]
+        c = Center(0, 0, 0)
+        for k in row.keys():
+            setattr(c,k,row[k])
+        C.append(c)
+    return C
+
+
 class Center(object):
     """Similar to voxel but coordinates are real- instead of integer-valued
 
@@ -449,7 +462,13 @@ class SubStack(object):
         ostream.close()
 
     def load_markers(self, filename, from_vaa3d=False, check_coords=True):
-        C = m_load_markers(filename, from_vaa3d)
+        suffix = filename.split('.')[-1]
+        if suffix == 'marker':
+            C = m_load_markers(filename, from_vaa3d)
+        elif suffix == 'apo':
+            C = a_load_markers(filename)
+        else:
+            raise ValueError("Don't understand suffix", suffix)
         if check_coords:
             for c in C:
                 if (c.x > self.info['Width'] or c.y > self.info['Height'] or c.z > self.info['Depth']):
