@@ -1,4 +1,5 @@
 """
+
 Estimate the size of somata given markers in a substack
 """
 from __future__ import print_function
@@ -7,10 +8,11 @@ import pandas as pd
 import scipy.ndimage.filters as filters
 import pylab
 import Image
+from bcfind.semadec import imtensor
 
-from ..utils import mkdir_p
+from bcfind.utils import mkdir_p
 
-from ..fast_threshold import two_kapur
+from bcfind.fast_threshold import two_kapur
 
 # np.set_printoptions(linewidth=160, precision=4, suppress=True, threshold=5000)
 
@@ -37,12 +39,11 @@ def plot_correlations(radii, correlations, centers, radiimax, radiiassigned, arg
             pylab.ylabel('correlation')
             pylab.grid()
             # pylab.legend()
-            pylab.show()
+    pylab.show()
 
 
 def inside_margin(c,substack):
     m = substack.plist['Margin']/2
-    m = 7  # FIXME: !!!
     if not inside_margin.warned:
         print('\n\n**** Warning!! constant in inside_margin to be fixed\n')
         inside_margin.warned = True
@@ -55,7 +56,6 @@ def max_correlation(patch, target, c, box):
         cA = A-np.mean(A)
         cB = B-np.mean(B)
         return np.sum(cA*cB)/np.sqrt((np.sum(cA*cA)*np.sum(cB*cB)))
-        # return np.sum(A*B)/np.sqrt((np.sum(A*A)*np.sum(B*B)))
 
     correlations = []
     crange = range(-box.shift, box.shift+1)
@@ -63,12 +63,12 @@ def max_correlation(patch, target, c, box):
         for y in crange:
             for z in crange:
                 cr = l_correlation(
-                    patch[c.y-box.size*box.an_y:c.y+box.size*box.an_y,
-                          c.x-box.size*box.an_x:c.x+box.size*box.an_x,
-                          c.z-box.size*box.an_z:c.z+box.size*box.an_z],
-                    target[c.y+y-box.size*box.an_y:c.y+y+box.size*box.an_y,
-                           c.x+x-box.size*box.an_x:c.x+x+box.size*box.an_x,
-                           c.z+z-box.size*box.an_z:c.z+z+box.size*box.an_z]
+                    patch[c.z-box.size*box.an_z:c.z+box.size*box.an_z,
+                          c.y-box.size*box.an_y:c.y+box.size*box.an_y,
+                          c.x-box.size*box.an_x:c.x+box.size*box.an_x],
+                    target[c.z+z-box.size*box.an_z:c.z+z+box.size*box.an_z,
+                           c.y+y-box.size*box.an_y:c.y+y+box.size*box.an_y,
+                           c.x+x-box.size*box.an_x:c.x+x+box.size*box.an_x]
                 )
                 correlations.append(cr)
     return max(correlations)
@@ -86,17 +86,15 @@ def tensor_from_substack(substack):
     D = substack.info['Depth']
     W = substack.info['Width']
     H = substack.info['Height']
-    tensor = np.zeros((W, H, D))
+    tensor = np.zeros((D, H, W))
     for z in range(D):
-        tensor[:,:,z] = np.array(substack.imgs[z])
+        tensor[z,:,:] = np.array(substack.imgs[z])
     return tensor
 
 
-def estimate_sizes(radii, centers, substack, box, debug_images):
+def estimate_sizes(radii, centers, tensor, substack, box, debug_images):
     for c in centers:
         c.xr, c.yr, c.zr = np.round([c.x, c.y, c.z])
-
-    tensor = tensor_from_substack(substack)
 
     correlations = {}
     for radius in radii:
@@ -105,11 +103,12 @@ def estimate_sizes(radii, centers, substack, box, debug_images):
     incenters = [c for c in centers if inside_margin(c,substack) > 0]
     pbar = pb.ProgressBar(widgets=['Processing %d markers: ' % len(incenters),
                                    pb.Percentage(), ' ', pb.AdaptiveETA()])
+    id_c=0
     for c in pbar(incenters):
-        # print('Processing', c.name)
-        local_slice = [slice(c.yr-box.an_y*(box.size+1),c.yr+box.an_y*(box.size+1)),
-                       slice(c.xr-box.an_x*(box.size+1),c.xr+box.an_x*(box.size+1)),
-                       slice(c.zr-box.an_z*(box.size+1),c.zr+box.an_z*(box.size+1))]
+        print(c.xr,c.yr,c.zr)
+        local_slice = [slice(c.zr-box.an_z*(box.size+1),c.zr+box.an_z*(box.size+1)),
+                       slice(c.yr-box.an_y*(box.size+1),c.yr+box.an_y*(box.size+1)),
+                       slice(c.xr-box.an_x*(box.size+1),c.xr+box.an_x*(box.size+1))]
         local = tensor[local_slice]
         histogram = np.histogram(local,bins=256,range=(0,256))[0]
         thresholds = two_kapur(histogram)
@@ -121,9 +120,9 @@ def estimate_sizes(radii, centers, substack, box, debug_images):
             save_debug_images('debugme/'+substack.substack_id+'-'+c.name.replace(' ','-'), localized_tensor)
 
         for radius in radii:
-            sigmas = [radius*box.an_y, radius*box.an_x, radius*box.an_z]
+            sigmas = [radius*box.an_z, radius*box.an_y, radius*box.an_x]
             target_tensor_3d = np.zeros_like(tensor)
-            target_tensor_3d[c.yr, c.xr, c.zr] = 1
+            target_tensor_3d[c.zr, c.yr, c.xr] = 1
             target_tensor_3d = filters.gaussian_filter(target_tensor_3d, sigma=sigmas,
                                                        mode='constant', cval=0.0,
                                                        truncate=max(2,radius*0.5))
@@ -131,10 +130,13 @@ def estimate_sizes(radii, centers, substack, box, debug_images):
             target_tensor_3d = (target_tensor_3d / np.max(target_tensor_3d))
             target_tensor_3d *= 255
             correlations[radius][c] = max_correlation(localized_tensor, target_tensor_3d, c, box)
+
+        id_c+=1
+
     return correlations
 
 
-def make_dataframe(radii, correlations, centers, args):
+def make_dataframe(radii, correlations, centers, gain, mincorr, defaultr, an_x, an_y, an_z):
     """Create a data frame for the results, formatted according to the Vaa3D .apo file format.
     In particular:
        - the 'res_1' column is filled with the estimated radius of a soma
@@ -173,30 +175,30 @@ def make_dataframe(radii, correlations, centers, args):
             rmax = radii[0]
             for r in radii:
                 # if correlations[r][c] > corrmax:
-                if (correlations[r][c] - corrmax)/corrmax > args.gain:
+                if (correlations[r][c] - corrmax)/corrmax > gain:
                     rmax = r
                     corrmax = correlations[r][c]
             radiimax[c] = rmax
-            if corrmax < args.mincorr:
-                rmax = args.defaultr
+            if corrmax < mincorr:
+                rmax = defaultr
             radiiassigned[c] = rmax
             # Calculate the volume for Vaa3D visualization as surface.
             # The apo file seems to accept only spherical objects. Because of anisotropy
             # we actually have a prolate spheroid so we compute the volume of such
             # ellipsoid below (but of course Vaa3D will show a sphere)
-            volume = 4.0/3.0*np.pi*(args.an_x*rmax)*(args.an_y*rmax)*(args.an_z*rmax)
+            volume = 4.0/3.0*np.pi*(an_x*rmax)*(an_y*rmax)*(an_z*rmax)
             colors = jet(int(corrmax*255))
 
             clist['#no'].append(i)
             clist['order_info'].append(i)
             clist['name'].append(c.name)
             clist['comment'].append('r=%.2f (%.2f)' % (radiimax[c], radiiassigned[c]))
-            clist['x'].append(c.x)
+            clist['x'].append(c.x)#add 1 pax
             clist['y'].append(c.y)
             clist['z'].append(c.z)
-            clist['max_i'].append(0)
-            clist['mean_i'].append(0)
-            clist['sdev_i'].append(0)
+            clist['max_i'].append(0.0)
+            clist['mean_i'].append(0.0)
+            clist['sdev_i'].append(0.0)
             clist['rgn size (#voxels)'].append(volume)
             clist['mass'].append(corrmax)
             clist['res_1'].append(radiiassigned[c])
