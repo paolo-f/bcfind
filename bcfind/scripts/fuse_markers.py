@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Fuse the markers of two views of the same substack
+Scripts that fuse two marker files corresponding to the same substack
 """
 
 from __future__ import print_function
@@ -15,7 +15,7 @@ from bcfind.volume import m_load_markers
 from bcfind.utils import mkdir_p
 
 
-def do_fuse(C_firstview,C_secondview,max_distance,output_marker_file,verbose):
+def do_fuse(C_firstview,C_secondview,max_distance,output_marker_file,first_view_id,second_view_id,verbose):
 
     # ============ max-cardinality bipartite matching
 
@@ -70,7 +70,8 @@ def do_fuse(C_firstview,C_secondview,max_distance,output_marker_file,verbose):
     for i,c in enumerate(C_firstview):
         if c not in true_positives_firstview:
             r,g,b = 255,0,255
-            name = 'first_view_marker_%03d (%s)' % (i,c.name)
+            #name = 'first_view_marker_%03d (%s)' % (i,c.name)
+            name = first_view_id+'_single('+c.name+')'
             #cx,cy,cz=int(round(c.x)),int(round(c.y)),int(round(c.z))
             cx,cy,cz = c.x,c.y,c.z
             #comment=':'.join(map(str,[cx,cy,cz,c]))
@@ -85,7 +86,8 @@ def do_fuse(C_firstview,C_secondview,max_distance,output_marker_file,verbose):
         c.is_false_positive = False
         if c not in true_positives_secondview:
             r,g,b = 255,0,0
-            name = 'second_view_marker_%03d (%s)' % (i,c.name)
+            #name = 'second_view_marker_%03d (%s)' % (i,c.name)
+            name = second_view_id+'_single('+c.name+')'
             c.is_false_positive = True
             #cx,cy,cz=int(round(c.x)),int(round(c.y)),int(round(c.z))
             cx,cy,cz = c.x,c.y,c.z
@@ -100,7 +102,8 @@ def do_fuse(C_firstview,C_secondview,max_distance,output_marker_file,verbose):
 
     for i,c in enumerate(merged_centers):
         r,g,b = 255,255,0
-        name = 'merged_marker_%03d (%s)' % (i,c.name)
+        #name = 'merged_marker_%03d (%s)' % (i,c.name)
+        name = first_view_id+'_'+second_view_id+'_merged_'+str(i)#('+c.name+')'
         cx,cy,cz = c.x,c.y,c.z
         #comment=':'.join(map(str,[cx,cy,cz,c]))
         comment = ''
@@ -116,15 +119,20 @@ def get_parser():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('first_view', metavar='first_view', type=str,
-                        help='Markers for the 1st view')
+                        help='Markers of the 1st view')
     parser.add_argument('second_view', metavar='second_view', type=str,
-                        help='Markers for the 2nd view')
+                        help='Markers of the 2nd view')
     parser.add_argument('fused_file', metavar='fused_file', type=str,
-                        help='Output file containing fused markers, e.g. 004431/ms.marker')
+                        help='Output file of fused markers')
+
+    parser.add_argument('--first_view_id', metavar='first_view_id', type=str, action='store', default='first_view_marker_',
+                        help='id of the 1st view')
+    parser.add_argument('--second_view_id', metavar='second_view_id', type=str, action='store', default='second_view_marker_',
+                        help='id of the 2nd view')
 
     parser.add_argument('--max_distance', metavar='max_distance', dest='max_distance',
                         action='store', type=float, default=2.0,
-                        help='max distance')
+                        help='maximum distance beyond which two neurons of different views are no longer considered the same element')
     parser.add_argument('--verbose', dest='verbose', action='store_true', help='Verbose output.')
 
     return parser
@@ -143,7 +151,8 @@ def main(args):
         C_secondmarkers = []
 
     mkdir_p(os.path.dirname(args.fused_file))
-    do_fuse(C_firstmarkers,C_secondmarkers,args.max_distance, args.fused_file,args.verbose)
+    do_fuse(C_firstmarkers,C_secondmarkers,args.max_distance, args.fused_file,args.first_view_id,args.second_view_id,args.verbose)
+
 
 
 if __name__ == '__main__':
