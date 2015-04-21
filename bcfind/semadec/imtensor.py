@@ -4,7 +4,6 @@ import os
 import Image
 import numpy as np
 from progressbar import *
-from libtiff import TIFF
 
 from bcfind.utils import mkdir_p
 
@@ -72,12 +71,10 @@ expected to be stored in the order Z,Y,X
     pbar = ProgressBar(widgets=['Saving %d tiff files: ' % np_tensor_3d.shape[0], Percentage(), ' ', AdaptiveETA()])
     for z in pbar(range(np_tensor_3d.shape[0])):
         out_img = Image.fromarray(np_tensor_3d[z,:,:])
-        #tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
-        #out_img.save(tempname)
-        #destname = path+'/'+prefix+'%04d.tif' % (minz+z)
-        #os.system('tiffcp -clzw:2 ' + tempname + ' ' + destname)
-        #os.remove(tempname)
-        tif = TIFF.open(path+'/'+prefix+'%d.tif' % (minz+z), mode='w')
-        tif.write_image(out_img, compression='lzw')
+        tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
+        out_img.save(tempname)
+        destname = path+'/'+prefix+'%04d.tif' % (minz+z)
+        os.system('tiffcp -clzw:2 ' + tempname + ' ' + destname)
+        os.remove(tempname)
 
     print('Saved substack in',path)
