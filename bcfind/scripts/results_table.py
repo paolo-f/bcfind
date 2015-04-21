@@ -41,7 +41,7 @@ def parse_results(resdir):
     return totals,res
 
 def main(args):
-    pd.set_option('precision',2)
+    pd.set_option('precision',3)
     pd.set_option('display.width', 120)
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.show_dimensions', False)
@@ -64,7 +64,7 @@ def main(args):
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    
+
     parser.add_argument('resdir', metavar='resdir', type=str, nargs='+',
                         help='must contain resdir/??????/eval.log')
     parser.add_argument('-t', '--totals_only', dest='totals_only', action='store_true',
