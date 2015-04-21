@@ -3,9 +3,10 @@ import numpy as np
 from progressbar import *
 import scipy.ndimage.filters as filters
 import theano
-
+from pylearn2.space import CompositeSpace,VectorSpace
 from pylearn2.models.autoencoder import *
 from pylearn2.models.mlp import MLP
+import tables
 import timeit
 
 
@@ -65,17 +66,27 @@ class PredictorFromPylearn2MLP(Predictor):
     def __init__(self, model):
         self.model = model
         self.X_sv = model.get_input_space().make_batch_theano()
-        self.X_sv.name = 'X_sv'
         self.Xhat_sv = model.fprop(self.X_sv)
-        self.reconstruction_function = theano.function([self.X_sv],[self.Xhat_sv])
 
-    def predict(self,X,batch_size=None, n_views=1):
+        if isinstance(self.X_sv, tuple):
+            self.reconstruction_function = theano.function(self.X_sv,[self.Xhat_sv])
+        else:
+            self.reconstruction_function = theano.function([self.X_sv],[self.Xhat_sv])
+
+
+    def predict(self,X,model,batch_size=None, n_views=1):
         if batch_size is None:
             batch_size = X.shape[0]
         n_batches = X.shape[0]/batch_size
         Xhat = np.zeros((X.shape[0],X.shape[1]/n_views))
         for i in xrange(n_batches):
-            xx = self.reconstruction_function(X[i*batch_size:(i+1)*batch_size,:])
+
+            if isinstance(model.get_input_space(), VectorSpace):
+                xx = self.reconstruction_function(X[i*batch_size:(i+1)*batch_size,:])
+            elif isinstance(model.get_input_space(), CompositeSpace):
+                xx = self.reconstruction_function(X[i*batch_size:(i+1)*batch_size,0:X.shape[1]/n_views],X[i*batch_size:(i+1)*batch_size,X.shape[1]/n_views:X.shape[1]])
+            else:
+                raise ValueError("Can't support input space " + str(model.get_input_space().__class__))
             Xhat[i*batch_size:(i+1)*batch_size] = xx[0]
         return Xhat
 
