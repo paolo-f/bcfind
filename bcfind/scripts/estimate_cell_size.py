@@ -20,8 +20,9 @@ def main(args):
 
     radii = np.arange(0.8, 2.5, step=0.1)
     box = Struct(an_x=args.an_x, an_y=args.an_y, an_z=args.an_z, size=args.size, shift=args.shift)
-    correlations = cs.estimate_sizes(radii, centers, substack, box, args.debug_images)
-    df, radiimax, radiiassigned = cs.make_dataframe(radii, correlations, centers, args)
+    tensor = cs.tensor_from_substack(substack)
+    correlations = cs.estimate_sizes(radii, centers, tensor, substack, box, args.debug_images)
+    df, radiimax, radiiassigned = cs.make_dataframe(radii, correlations, centers, args.gain, args.mincorr, args.defaultr, args.an_x, args.an_y, args.an_z)
     outputfile = args.indir + '/' + args.substack_id + '-size.apo'
     cs.save_apo_file(df, outputfile)
     if args.plot_correlations:
