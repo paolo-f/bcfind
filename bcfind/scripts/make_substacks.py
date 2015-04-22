@@ -19,7 +19,6 @@ import Image
 import uuid
 
 
-from libtiff import TIFF
 from PIL import Image, TiffImagePlugin
 from bcfind.utils import mkdir_p
 
@@ -114,17 +113,12 @@ def main(args):
                     region = region.convert('L')
                 if args.verbose:
                     print(' ', substack_id, end='')
-                #region.save(substack_dir+'/'+image_file)
+                region.save(substack_dir+'/'+image_file)
 
-                #tmpfile = '/tmp/'+str(uuid.uuid4())+'.tif'
-                #region.save(tmpfile)
-                #subprocess.call(['tiffcp', '-clzw:2', tmpfile, substack_dir+'/'+image_file])
-                #os.unlink(tmpfile)
-
-                tif = TIFF.open(substack_dir+'/'+image_file, mode='w')
-                tif.write_image(region, compression='lzw')
-
-
+                tmpfile = '/tmp/'+str(uuid.uuid4())+'.tif'
+                region.save(tmpfile)
+                subprocess.call(['tiffcp', '-clzw:2', tmpfile, substack_dir+'/'+image_file])
+                os.unlink(tmpfile)
 
                 # substack['Files'].append(substack_dir+'/'+image_file)
                 # the path to files is now relative
