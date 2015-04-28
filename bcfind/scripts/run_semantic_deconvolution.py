@@ -6,6 +6,7 @@ from __future__ import print_function
 import argparse
 import cPickle as pickle
 import tables
+import numpy as np
 
 from bcfind.volume import SubStack
 from bcfind.semadec import imtensor
@@ -19,14 +20,16 @@ def main(args):
     # Standardize volume according to mean and std found in the training set
     print('Reading standardization data from', args.trainfile)
     h5 = tables.openFile(args.trainfile)
-    Xmean = h5.root.Xmean[:]
-    Xstd = h5.root.Xstd[:]
+    Xmean = h5.root.Xmean[:].astype(np.float32)
+    Xstd = h5.root.Xstd[:].astype(np.float32)
     h5.close()
     print('Starting semantic devonvolution of volume', args.substack_id)
     model = pickle.load(open(args.model))
     minz = int(substack.info['Files'][0].split('full_')[1].split('.tif')[0])
+
     reconstruction = deconvolver.filter_volume(np_tensor_3d, Xmean, Xstd,
-                                               args.extramargin, model, args.speedup)
+                                               args.extramargin, model, args.speedup, args.do_cython)
+
     imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz)
 
 
@@ -53,6 +56,8 @@ def get_parser():
     parser.add_argument('--speedup', metavar='speedup', dest='speedup',
                         action='store', type=int, default=4,
                         help='convolution stride (isotropic along X,Y,Z)')
+    parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')
+    parser.set_defaults(do_cython=False)
     return parser
 
 if __name__ == '__main__':
