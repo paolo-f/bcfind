@@ -7,7 +7,7 @@ __author__ = 'paciscopi'
 
 import numpy as np
 import os
-import Image
+from PIL import Image
 import glob
 import cv2
 import argparse

@@ -9,7 +9,7 @@ __author__ = 'paciscopi'
 import numpy as np
 import os
 import sys
-import Image
+from PIL import Image
 import glob
 from pyparsing import Word, alphanums,nums, restOfLine, Suppress, Group, Combine, Optional
 import timeit

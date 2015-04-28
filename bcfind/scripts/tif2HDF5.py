@@ -8,7 +8,7 @@ import numpy as np
 import tables
 import os
 import progressbar as pb
-import Image
+from PIL import Image
 
 def get_files(indir, prefix=None, suffix = '.tif'):
     savewd = os.getcwd()

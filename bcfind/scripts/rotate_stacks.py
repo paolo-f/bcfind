@@ -7,7 +7,7 @@ __author__ = 'paciscopi'
 
 import numpy as np
 import os
-import Image
+from PIL import Image
 import glob
 from pyparsing import Word, nums, restOfLine, Suppress, Group, Combine, Optional
 import timeit

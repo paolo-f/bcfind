@@ -1,7 +1,7 @@
 from __future__ import print_function
 import tables
 import os
-import Image
+from PIL import Image
 import numpy as np
 from progressbar import *
 

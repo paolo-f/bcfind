@@ -11,7 +11,7 @@ import ujson
 import tables
 import pandas as pd
 import numpy as np
-import Image
+from PIL import Image
 import ImageDraw
 import cPickle as pickle
 from scipy.spatial import cKDTree

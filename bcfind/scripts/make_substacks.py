@@ -15,7 +15,6 @@ import argparse
 import json
 import os
 import subprocess
-import Image
 import uuid
 
 

@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import scipy.ndimage.filters as filters
 import pylab
-import Image
+from PIL import Image
 from bcfind.semadec import imtensor
 
 from bcfind.utils import mkdir_p
