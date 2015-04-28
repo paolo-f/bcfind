@@ -9,7 +9,8 @@ ctypedef np.float32_t  DTYPE_t
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def preprocess_2d(np.ndarray[DTYPE_t, ndim=3] tensor, Py_ssize_t z0, int extramargin, int size_patch, int speedup):
+#def preprocess_2d(np.ndarray[DTYPE_t, ndim=3] tensor, Py_ssize_t z0, int extramargin, int size_patch, int speedup):
+def preprocess_2d(np.ndarray[DTYPE_t, ndim=3] tensor, Py_ssize_t z0, int extramargin, int size_patch, int speedup, np.ndarray[DTYPE_t, ndim=1] mean, np.ndarray[DTYPE_t, ndim=1] std):
 
     cdef Py_ssize_t x0,y0
     cdef int start_x=extramargin
@@ -44,7 +45,7 @@ def preprocess_2d(np.ndarray[DTYPE_t, ndim=3] tensor, Py_ssize_t z0, int extrama
            for k from 0 <= k < patchlen:
                for j from 0 <= j < patchlen:
                    for i from 0 <= i < patchlen:
-                     patch_ravel[patchlen_square*k+patchlen*j+i] = tensor[z0__size_patch+k,y0__size_patch+j,x0__size_patch+i]
+                     patch_ravel[patchlen_square*k+patchlen*j+i] = (tensor[z0__size_patch+k,y0__size_patch+j,x0__size_patch+i] - mean[patchlen_square*k+patchlen*j+i])/std[patchlen_square*k+patchlen*j+i]
 
 
            flat_data[iter_xy] = patch_ravel
