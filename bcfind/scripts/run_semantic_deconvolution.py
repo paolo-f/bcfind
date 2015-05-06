@@ -28,7 +28,7 @@ def main(args):
     minz = int(substack.info['Files'][0].split('full_')[1].split('.tif')[0])
 
     reconstruction = deconvolver.filter_volume(np_tensor_3d, Xmean, Xstd,
-                                               args.extramargin, model, args.speedup, args.do_cython)
+                                               args.extramargin, model, args.speedup, args.do_cython, args.do_multiprocessing)
 
     imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz)
 
@@ -57,7 +57,8 @@ def get_parser():
                         action='store', type=int, default=4,
                         help='convolution stride (isotropic along X,Y,Z)')
     parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')
-    parser.set_defaults(do_cython=False)
+    parser.add_argument('--do_multiprocessing', dest='do_multiprocessing', action='store_true', help='use the multiprocessing module to create a pool of workers')
+    parser.set_defaults(do_cython=False,do_multiprocessing=False)
     return parser
 
 if __name__ == '__main__':
