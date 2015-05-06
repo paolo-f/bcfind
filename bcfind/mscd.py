@@ -10,6 +10,7 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.utils import extmath
 from scipy.spatial import cKDTree
 from collections import namedtuple
+from scipy.ndimage.filters import gaussian_filter
 
 from . import volume
 from . import threshold
@@ -270,13 +271,16 @@ def _patch_ms(patch, args):
         return None
 
     bandwidth = args.mean_shift_bandwidth
-
     radius = args.hi_local_max_radius
     reg_maxima = mh.regmax(patch.astype(np.int))
-    xx, yy, zz = np.mgrid[:2*radius+1, :2*radius+1, :2*radius+1]
-    sphere = (xx - radius) ** 2 + (yy - radius) ** 2 + (zz - radius) ** 2
-    se = sphere <= radius*radius
-    f = se.astype(np.float64)
+    #xx, yy, zz = np.mgrid[:2*radius+1, :2*radius+1, :2*radius+1]
+    #sphere = (xx - radius) ** 2 + (yy - radius) ** 2 + (zz - radius) ** 2
+    #se = sphere <= radius*radius
+    #f = se.astype(np.float64)
+
+    f=np.zeros((int(radius+1)*2+1,int(radius+1)*2+1,int(radius+1)*2+1), dtype=np.float64);f[int(radius+1),int(radius+1),int(radius+1)]=1
+    f=gaussian_filter(f, radius/2.,mode='constant', cval=0.0);f=f/np.amax(f)
+
     min_mass = np.sum(f)*minint
     local_mass = mh.convolve(patch, weights=f, mode='constant', cval=0.0)
     above = local_mass > min_mass
