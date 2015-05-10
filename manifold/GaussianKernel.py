@@ -32,6 +32,14 @@ class GaussianKernel:
         distance = self._metric.compute_single(x1, x2)
         return np.exp(-np.power(distance, 2) / self._sigma ** 2)
 
+    def compute_weights_for_points(self,X_new,X):
+        dist_array = np.empty(shape=(X_new.shape[0],X.shape[0]))
+        for i in xrange(X_new.shape[0]):
+            dist_array[i,:] = np.linalg.norm(X - X_new[i,:], axis=1)
+
+        return np.exp(-np.power(dist_array, 2) / self._sigma ** 2)
+
+
     def compute_multiple(self, X):
         """
         Takes as input a Dataset matrix and returns a Gaussian kernel values matrix.

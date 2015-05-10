@@ -1,7 +1,7 @@
 from __future__ import print_function
 import tables
 import os
-import Image
+from PIL import Image
 import numpy as np
 from progressbar import *
 
@@ -73,7 +73,8 @@ expected to be stored in the order Z,Y,X
         out_img = Image.fromarray(np_tensor_3d[z,:,:])
         tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
         out_img.save(tempname)
-        destname = path+'/'+prefix+'%06d.tif' % (minz+z)
+        destname = path+'/'+prefix+'%04d.tif' % (minz+z)
         os.system('tiffcp -clzw:2 ' + tempname + ' ' + destname)
         os.remove(tempname)
+
     print('Saved substack in',path)

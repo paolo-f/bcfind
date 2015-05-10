@@ -17,7 +17,7 @@ import argparse
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    
+
     parser.add_argument("data_file", help="path to the markers file")
     parser.add_argument("outdir", help="where to save minimum nearest neighbors and seeds")
 
@@ -27,24 +27,24 @@ def get_parser():
 def main(args):
     data_file = args.data_file
     outdir = utils.add_trailing_slash(args.outdir)
-    
+
     outdir_seeds = outdir + 'seeds/'
     outdir_nn = outdir + 'nn/'
-    
+
     utils.make_dir(outdir)
     utils.make_dir(outdir_seeds)
     utils.make_dir(outdir_nn)
-    
+
     for folder in xrange(parameters.jobs):
         utils.make_dir(outdir_seeds + repr(folder))
-    
+
     data_frame = pd.read_csv(data_file)
-    
+
     points_matrix = data_frame.as_matrix([parameters.x_col, parameters.y_col, parameters.z_col])
     name = data_frame[parameters.name_col]
-    
+
     data_substacks = utils.points_to_substack(points_matrix, name)
-    
+
     seeds = list()
     global_kdtree = cKDTree(points_matrix)
     for substack, data in data_substacks.iteritems():
@@ -54,12 +54,13 @@ def main(args):
         _, index = kdtree.query(np.mean(X, axis=0))
         _, centroid = global_kdtree.query(X[index, :])
         seeds.append(centroid)
-    
+
+    print len(seeds)
     n_neighbors = graph_utils.compute_minimum_nearest_neighbors(points_matrix)
-    
+
     with open(outdir_nn + repr(n_neighbors), 'w') as nn_file:
         nn_file.close()
-    
+
     folder = 0
     while len(seeds) > 0:
         seed = seeds.pop()

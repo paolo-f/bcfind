@@ -11,7 +11,7 @@ import ujson
 import tables
 import pandas as pd
 import numpy as np
-import Image
+from PIL import Image
 import ImageDraw
 import cPickle as pickle
 from scipy.spatial import cKDTree
@@ -377,7 +377,7 @@ class SubStack(object):
             img_z = Image.fromarray(np_tensor_3d[z,:,:])
             self.imgs.append(img_z)
             self.pixels.append(img_z.load())
-        tee.log(z, 'images read into stack (from h5 file)')
+        tee.log(z+1, 'images read into stack (from h5 file)')
 
     def load_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None):
         """Loads a sequence of images into a stack

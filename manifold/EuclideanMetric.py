@@ -16,7 +16,7 @@ class EuclideanMetric:
         Parameters
         ----------
 
-        x1 : numpy array 
+        x1 : numpy array
             first point
         x2 : numpy array
             second point
@@ -24,7 +24,7 @@ class EuclideanMetric:
         Returns
         -------
 
-        distance : 
+        distance :
             euclidean distance between the points
         """
 
@@ -37,13 +37,13 @@ class EuclideanMetric:
         Parameters
         ----------
 
-        X : numpy array of shape (n_samples, n_dimensions) 
+        X : numpy array of shape (n_samples, n_dimensions)
             holding the points of the dataset
 
         Returns
         -------
 
-        distance_matrix : numpy array of shape (n_samples, n_samples) 
+        distance_matrix : numpy array of shape (n_samples, n_samples)
             holding distances between dataset points
         """
 

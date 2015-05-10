@@ -10,7 +10,7 @@ class PatchMaker:
     Parameters
     ----------
 
-    X : numpy array of shape (n_samples, n_dimensions) 
+    X : numpy array of shape (n_samples, n_dimensions)
         whole dataset
     seed : int
         index of a row of X representing the point from which the patch making process starts
@@ -142,7 +142,7 @@ class PatchMaker:
         Returns
         -------
 
-        closed_points : numpy array 
+        closed_points : numpy array
             holding the indexes of the points belonging to the patch;
             can be used for fancy indexing
         """
