@@ -58,6 +58,9 @@ def get_parser():
     parser.add_argument('-r', '--hi_local_max_radius', metavar='r', dest='hi_local_max_radius',
                         action='store', type=float, default=6,
                         help='Radius of the seed selection ball (r)')
+    parser.add_argument('-t', '--seeds_filtering_mode', dest='seeds_filtering_mode',
+                        action='store', type=str, default='soft',
+                        help="Type of seed selection ball ('hard' or 'soft')")
     parser.add_argument('-R', '--mean_shift_bandwidth', metavar='R', dest='mean_shift_bandwidth',
                         action='store', type=float, default=5.5,
                         help='Radius of the mean shift kernel (R)')
