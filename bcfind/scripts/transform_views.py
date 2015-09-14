@@ -37,7 +37,7 @@ def parse_transformation_file(args):
     grammar = ('#' + restOfLine).suppress() | Word(alphanums + "_" + alphanums) + comma + row_matrix + comma + row_matrix + comma + row_matrix + comma + row_matrix + restOfLine.suppress()
 
     try:
-        f = open(args.log_folder+'/'+args.substack_id, 'r')
+        f = open(args.log_file, 'r')
     except IOError:
         print('file not existing')
         sys.exit(1)
@@ -63,7 +63,7 @@ def transform_substack(args, R, t):
 
     ss = SubStack(args.indir, args.substack_id)
 
-    input_stack_file = args.indir.rstrip('//') + '.h5'
+    input_stack_file = args.tensorimage
 
     hf5 = tables.openFile(input_stack_file, 'r')
 
@@ -99,35 +99,27 @@ def transform_substack(args, R, t):
                                        origin[1] - offset_H_left:origin[1] + or_ss_shape[1] + offset_H_right,
                                        origin[2] - offset_W_left:origin[2] + or_ss_shape[2] + offset_W_right]
 
-    #pixels_input_d = hf5.root.full_image[origin[0]:origin[0]+ or_ss_shape[0],
-                                       #origin[1] :origin[1] + or_ss_shape[1],
-                                       #origin[2] :origin[2] + or_ss_shape[2]]
-    #imtensor.save_tensor_as_tif(pixels_input_d,'/tmp/120214_prova', 0)
 
     exmar_D_left = 0 if offset_D_left == origin[0] else args.extramargin
     exmar_H_left  = 0 if offset_H_left == origin[1] else args.extramargin
     exmar_W_left  = 0 if offset_W_left == origin[2] else args.extramargin
-    #exmar_D_right  = 0 if offset_D_right == full_D -(origin[0] + or_ss_shape[0]) else args.extramargin
-    #exmar_H_right  = 0 if offset_H_right == full_H -(origin[1] + or_ss_shape[1]) else args.extramargin
-    #exmar_W_right  = 0 if offset_W_right == full_W -(origin[2] + or_ss_shape[2]) else args.extramargin
-
 
     depth_target, height_target, width_target = or_ss_shape[0] + 2 * args.extramargin, or_ss_shape[1] + 2 * args.extramargin, or_ss_shape[2] + 2 * args.extramargin #new
-    depth_input, height_input, width_input = pixels_input.shape[0], pixels_input.shape[1],  pixels_input.shape[2] #new
-    pixels_transformed_input = np.zeros((depth_target,height_target,width_target), dtype=np.uint8) #new
+    depth_input, height_input, width_input = pixels_input.shape[0], pixels_input.shape[1],  pixels_input.shape[2]
+    pixels_transformed_input = np.zeros((depth_target,height_target,width_target), dtype=np.uint8)
 
 
 
     total_start = timeit.default_timer()
 
     coords_2d_target = np.vstack(np.indices((width_target,height_target)).swapaxes(0,2).swapaxes(0,1))
-    invR = np.linalg.inv(R)
+    invR = R.T
 
-    t = -np.dot(invR, t)
-    invR = R
+    if args.invert:
+        t = -np.dot(invR, t)
+        invR = R
 
     invR_2d_transpose = np.transpose(np.dot(invR[:, 0:2], np.transpose(coords_2d_target - t[0:2])))
-
 
     offset_coords = np.array([[offset_W_left - exmar_W_left, offset_H_left - exmar_H_left, offset_D_left - exmar_D_left]]*invR_2d_transpose.shape[0])#new
 
@@ -160,39 +152,46 @@ def transform_substack(args, R, t):
         out_tensor = out_tensor[args.extramargin:depth_target-args.extramargin,args.extramargin:height_target-args.extramargin,args.extramargin:width_target-args.extramargin]
         imtensor.save_tensor_as_tif(out_tensor, substack_outdir, minz, prefix=_prefix)
 
-
-
-    target_shape = (depth_target, height_target, width_target)
-    atom = tables.UInt8Atom()
-    h5f = tables.openFile(args.outdir + '/' + ss.substack_id + '.h5', 'w')
-    ca = h5f.createCArray(h5f.root, 'full_image', atom, target_shape)
-    for z in xrange(0, depth_target, 1):
-        ca[z, :, :] = pixels_transformed_input[z,:,:]
-    h5f.close()
-
     total_stop = timeit.default_timer()
-    print ("total time transformation stack ", str(total_stop - total_start))
+    print ("total time transformation stack:%s "%(str(total_stop - total_start)))
+
+    if args.get_tensor:
+        return np.array(pixels_transformed_input, dtype=np.uint8)
+    else:
+        target_shape = (depth_target, height_target, width_target)
+        atom = tables.UInt8Atom()
+        h5f = tables.openFile(args.outdir + '/' + ss.substack_id + '.h5', 'w')
+        ca = h5f.createCArray(h5f.root, 'full_image', atom, target_shape)
+        for z in xrange(0, depth_target, 1):
+            ca[z, :, :] = pixels_transformed_input[z,:,:]
+        h5f.close()
+
 
 
 
 
 def get_parser():
     parser = argparse.ArgumentParser(description="""
-    Preprocess a substack using a neural network model
+    This script applies a rigid transformation to a 3D tensor
     """, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('indir', metavar='indir', type=str,
-                        help='dir of input stack')
-    parser.add_argument('log_folder', metavar='log_folder', type=str,
-                        help='folder in which the transformation log files are stored')
-    parser.add_argument('outdir', metavar='outdir', type=str,
-                        help='folder where the transformed substacks will be saved')
+                        help='needs indir/info.json, substacks, e.g. indir/000, and ground truth, e.g. indir/000-GT.marker')
+    parser.add_argument('tensorimage', metavar='tensorimage', type=str,
+                        help='path to the tensor image .h5 file')
+    parser.add_argument('log_file', metavar='log_file', type=str,
+                        help='File ascii that stores the estimated rigid transformation. It consists of a single line, formatted as follows:'
+                        ' substack_id,R00,R01,R02,R10,R11,R12,R20,R21,R22,tx,ty,yz,comment')
     parser.add_argument('substack_id', metavar='substack_id', type=str,
                         help='Substack identifier, e.g. 100905')
+    parser.add_argument('outdir', metavar='outdir', type=str,
+                        help='folder where the transformed substack will be saved')
     parser.add_argument('--extramargin', metavar='extramargin', dest='extramargin',
                         action='store', type=int, default=6,
                         help='Extra margin for convolution. Should be equal to (filter_size - 1)/2')
+    parser.add_argument('--invert', dest='invert', action='store_true', help='If it\'s false the transformation is applied considering indir as moving tensor. Otherwise indir is considered as reference and the transformation will be inverted   ')
     parser.add_argument('--savetiff', dest='save_tiff', action='store_true', help='save the transformed tiff images')
+    parser.add_argument('--get_tensor',dest='get_tensor', action='store_true', help='get the transformed tensor')
     return parser
 
 
