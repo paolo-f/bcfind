@@ -120,28 +120,33 @@ def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_fil
     if errors_marker_file is not None:
         ostream.close()
 
-    # This is for the recall-precision and ROC curves according to manifold distance
-    if hasattr(C_pred[0],'distance') and rp_file is not None:
-        with open(rp_file, 'w') as ostream:
-            for i,c in enumerate(C_pred):
-                if inside(c,substack):
-                    if c in true_positives_pred:
-                        print(-c.distance, '1', file=ostream)
-                    else:
-                        print(-c.distance, '0', file=ostream)
-            # Add also the false negatives with infinite distance so they will always be rejected
-            for i,c in enumerate(C_true):
-                if c not in true_positives_true:
+
+    if len(C_pred):
+        if hasattr(C_pred[0],'distance') and rp_file is not None:
+            with open(rp_file, 'w') as ostream:
+                for i,c in enumerate(C_pred):
                     if inside(c,substack):
-                        print(-1000, '1', file=ostream)
+                        if c in true_positives_pred:
+                            print(-c.distance, '1', file=ostream)
+                        else:
+                            print(-c.distance, '0', file=ostream)
+                # Add also the false negatives with infinite distance so they will always be rejected
+                for i,c in enumerate(C_true):
+                    if c not in true_positives_true:
+                        if inside(c,substack):
+                            print(-1000, '1', file=ostream)
 
     if len(TP_inside) > 0:
         precision = float(len(TP_inside))/float(len(TP_inside)+len(FP_inside))
         recall = float(len(TP_inside))/float(len(TP_inside)+len(FN_inside))
     else:
         precision = int(len(FP_inside) == 0)
-        recall = 1.0
-    F1 = 2*precision*recall/(precision+recall)
+        recall = int(len(FN_inside) == 0)
+
+    if len(TP_inside)==0 and len(FP_inside)>0 and len(FN_inside)>0:
+        F1 = 0.00
+    else:
+        F1 = 2*precision*recall/(precision+recall)
 
     C_pred_inside = [c for c in C_pred if inside(c,substack)]
     C_true_inside = [c for c in C_true if inside(c,substack)]
