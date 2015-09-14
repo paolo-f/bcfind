@@ -15,6 +15,7 @@ import argparse
 import tables
 import math
 from scipy import special
+from progressbar import *
 
 
 #Arun algorithm
@@ -29,7 +30,6 @@ def get_rigid(src, dst): # Assumes both or Nx3 matrices
     return R,t
 
 def findBestRigidBodyEstimation(markers_input, markers_output):
-
 
     grammar = ('#' + restOfLine).suppress() | Group(Combine(Word(nums) + Optional("." + Word(nums))) + Suppress(",") + Combine(Word(nums) + Optional("." + Word(nums))) + Suppress(",") + Combine(Word(nums) + Optional("." + Word(nums)))) + restOfLine.suppress()
 
@@ -67,7 +67,7 @@ def findBestRigidBodyEstimation(markers_input, markers_output):
         if len(error_vector[error_vector < tolerance])> consensus_set:
             consensus_set =  len(error_vector[error_vector < tolerance])
             id_inliers = np.where(error_vector < tolerance)[0]
-            print("consensus set ", consensus_set)
+            #print("consensus set ", consensus_set)
             if consensus_set >= consensus_threshold:
                 break
 
@@ -75,10 +75,6 @@ def findBestRigidBodyEstimation(markers_input, markers_output):
     best_w = np.zeros((1, X.shape[0]), dtype=np.double).ravel()
     best_w[id_inliers] = 1
     R, t, error_vector, transfX, diff = rigidMotionEstimation(X, T, best_w)
-
-
-    print error_vector
-    print len(error_vector[error_vector < tolerance])
 
     return R, t
 
@@ -176,8 +172,8 @@ def rigidMotionEstimation(X, T, weights, verbose=False):
 
     return R, t, error_vector, transfX, np.transpose(diff)
 
-#@profile
-def blending(input_view, target_view, transformed_view, R, t):
+
+def apply_transform(input_view, target_view, transformed_view, R, t):
 
     t_start = timeit.default_timer()
 
@@ -195,8 +191,7 @@ def blending(input_view, target_view, transformed_view, R, t):
         depth_target, height_target, width_target = hf5_target_view.root.full_image.shape
         hf5_target_view.close()
     else:
-        print target_view + " is neither a hdf5 file nor a valid directory"
-        sys.exit(1)
+        raise Exception('%s is neither a hdf5 file nor a valid directory'%input_view)
 
     if (os.path.isdir(input_view)):
         filesInput = sorted([input_view + '/' + f for f in os.listdir(input_view) if f[0] != '.' and f.endswith(suffix)])
@@ -209,15 +204,13 @@ def blending(input_view, target_view, transformed_view, R, t):
             if convert_to_gray:
                 img_z = img_z.convert('L')
             pixels_input[z, :, :] = np.asarray(img_z)
-            #print str(z)
     elif (tables.isHDF5File(input_view)):
         hf5_input_view = tables.openFile(input_view, 'r')
         depth_input, height_input, width_input = hf5_input_view.root.full_image.shape
         pixels_input = hf5_input_view.root.full_image[0:depth_input,0:height_input,0:width_input]
         hf5_input_view.close()
     else:
-        print input_view + " is neither a hdf5 file nor a valid directory"
-        sys.exit(1)
+        raise Exception('%s is neither a hdf5 file nor a valid directory'%input_view)
 
 
 
@@ -226,12 +219,20 @@ def blending(input_view, target_view, transformed_view, R, t):
 
     pixels_transformed_input = np.empty((depth_target, height_target, width_target), dtype=np.uint8)
 
-    if not os.path.exists(transformed_view):
-        os.makedirs(transformed_view)
+    h5_output=False
+    if (transformed_view.endswith('.h5')):
+        target_shape = (depth_target, height_target, width_target)
+        atom = tables.UInt8Atom()
+        h5f = tables.openFile(transformed_view, 'w')
+        ca = h5f.createCArray(h5f.root, 'full_image', atom, target_shape)
+        h5_output=True
     else:
-        files = glob.glob(transformed_view + '/*')
-        for f in files:
-            os.remove(f)
+        if not os.path.exists(transformed_view):
+            os.makedirs(transformed_view)
+        else:
+            files = glob.glob(transformed_view + '/*')
+            for f in files:
+                os.remove(f)
 
     total_start = timeit.default_timer()
 
@@ -239,34 +240,27 @@ def blending(input_view, target_view, transformed_view, R, t):
     coords_2d_target = np.vstack(np.indices((width_target,height_target)).swapaxes(0,2).swapaxes(0,1))
     invR = np.linalg.inv(R)
     invR_2d_transpose = np.transpose(np.dot(invR[:, 0:2], np.transpose(coords_2d_target - t[0:2])))
-    for z in xrange(0, depth_target, 1): #depth_target
-        print "...transforming slice " + str(z)
-        start = timeit.default_timer()
+
+    pbar = ProgressBar(maxval=depth_target,widgets=['Rotating %d slices: ' % (depth_target),
+                                Percentage(), ' ', ETA()])
+    rangez=range(0,depth_target,1)
+    for z in pbar(rangez):
         R_t_3d = np.transpose(invR_2d_transpose + invR[:, 2] * (z - t[2]))
-
-
-
         good_indices = np.arange(R_t_3d.shape[1])
         good_indices = good_indices[(R_t_3d[0, :] > 0) * (R_t_3d[1, :] > 0) * (R_t_3d[2, :] > 0) * (R_t_3d[0, :] < (width_input - 1)) * (R_t_3d[1, :] < (height_input - 1)) * (R_t_3d[2, :] < (depth_input - 1))]
-
         R_t_3d = R_t_3d.take(good_indices,axis=1)
         R_t_3d = np.round(R_t_3d).astype(int)
         coords_2d_target_tmp = coords_2d_target.take(good_indices, axis=0)
-
-
         coords_3d_target_tmp = np.hstack((coords_2d_target_tmp, np.ones((coords_2d_target_tmp.shape[0], 1)).astype(int) * z))
-
-
         pixels_transformed_input[coords_3d_target_tmp[:, 2], coords_3d_target_tmp[:, 1], coords_3d_target_tmp[:, 0]] = pixels_input[R_t_3d[2, :], R_t_3d[1, :], R_t_3d[0, :]]
+        if h5_output:
+            ca[z, :, :] = pixels_transformed_input[z,:,:]
+        else:
+            im = Image.fromarray(np.uint8(pixels_transformed_input[z]))
+            im.save(transformed_view + '/slice_' + str(z).zfill(4) + ".tif", 'TIFF')
 
-
-        im = Image.fromarray(np.uint8(pixels_transformed_input[z]))
-        im.save(transformed_view + '/slice_' + str(z).zfill(4) + ".tif", 'TIFF')
-        stop = timeit.default_timer()
-        print "time: " + str(stop - start)
-
-
-
+    if h5_output:
+        h5f.close()
     total_stop = timeit.default_timer()
     print "total time transformation: " + str(total_stop - total_start)
 
@@ -278,9 +272,9 @@ def main(args):
     print('R: ', R)
     print('t: ', t)
     total_stop = timeit.default_timer()
-    print "total time transformation: " + str(total_stop - total_start)
+    print "Rigid Transformation estimated in %s secs."%(str(total_stop - total_start))
     if args.transform:
-        blending(args.input_view, args.target_view, args.transformed_view, R, t)
+        apply_transform(args.input_view, args.target_view, args.transformed_view, R, t)
 
 
 
@@ -288,11 +282,11 @@ def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('input_view', metavar='input_view', type=str,
-                        help='dir of the input tensor')
+                        help='tiff folder or hdf5 file of the input tensor')
     parser.add_argument('target_view', metavar='target_view', type=str,
-                        help='dir of the reference tensor')
+                        help='tiff folder or hdf5 file  of the reference tensor')
     parser.add_argument('transformed_view', metavar='transformed_view', type=str,
-                        help='output tensor of the 3D rigid transformation')
+                        help='tiff folder or hdf5 file( if it ends with .h5 extension) of the transformed tensor')
     parser.add_argument('markers_input', metavar='markers_input', type=str,
                         help='markers of the input tensor')
     parser.add_argument('markers_target', metavar='markers_target', type=str,
