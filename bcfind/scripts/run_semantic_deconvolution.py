@@ -7,6 +7,11 @@ import argparse
 import cPickle as pickle
 import tables
 import numpy as np
+import timeit
+
+import sys
+sys.path.insert(1,'/home/logos_users/paciscopi/bcfind20/bcfind')
+
 
 from bcfind.volume import SubStack
 from bcfind.semadec import imtensor
@@ -14,6 +19,10 @@ from bcfind.semadec import deconvolver
 
 
 def main(args):
+
+    total_start = timeit.default_timer()
+    print('Starting reconstruction of volume %s ...'%(args.substack_id))
+
     substack = SubStack(args.indir,args.substack_id)
     np_tensor_3d, minz = imtensor.load_nearby(args.tensorimage, substack, args.extramargin)
 
@@ -28,9 +37,11 @@ def main(args):
     minz = int(substack.info['Files'][0].split('full_')[1].split('.tif')[0])
 
     reconstruction = deconvolver.filter_volume(np_tensor_3d, Xmean, Xstd,
-                                               args.extramargin, model, args.speedup, args.do_cython, args.do_multiprocessing)
+                                               args.extramargin, model, args.speedup, args.do_cython)
 
     imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz)
+
+    print ("total time reconstruction: %s" %(str(timeit.default_timer() - total_start)))
 
 
 def get_parser():
@@ -57,9 +68,8 @@ def get_parser():
                         action='store', type=int, default=4,
                         help='convolution stride (isotropic along X,Y,Z)')
     parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')
-    parser.add_argument('--do_multiprocessing', dest='do_multiprocessing', action='store_true', help='use the multiprocessing module to create a pool of workers')
-    parser.set_defaults(do_cython=False,do_multiprocessing=False)
     return parser
+
 
 if __name__ == '__main__':
     parser = get_parser()
