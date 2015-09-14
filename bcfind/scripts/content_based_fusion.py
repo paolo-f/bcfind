@@ -37,7 +37,7 @@ def do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view, si
         print('Patch size: %dx%dx%d (%d)' % (1+2*size_patch, 1+2*size_patch, 1+2*size_patch, (1+2*size_patch)**3))
         print('Will subsample jumping by',speedup,'voxels')
         bar_extraction = ProgressBar(widgets=['Pre-processing %d slices (%d patches): ' % (len(rangez),len(rangex)*len(rangey)*len(rangez)),
-                                    Percentage(), ' ', AdaptiveETA()])
+                                    Percentage(), ' ', ETA()])
 
         n_points = len(rangex)*len(rangey)
         ndone = 0

@@ -68,7 +68,7 @@ expected to be stored in the order Z,Y,X
     """
     import uuid
     mkdir_p(path)
-    pbar = ProgressBar(widgets=['Saving %d tiff files: ' % np_tensor_3d.shape[0], Percentage(), ' ', AdaptiveETA()])
+    pbar = ProgressBar(widgets=['Saving %d tiff files: ' % np_tensor_3d.shape[0], Percentage(), ' ', ETA()])
     for z in pbar(range(np_tensor_3d.shape[0])):
         out_img = Image.fromarray(np_tensor_3d[z,:,:])
         tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
