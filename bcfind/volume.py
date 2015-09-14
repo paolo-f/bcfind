@@ -16,10 +16,10 @@ import ImageDraw
 import cPickle as pickle
 from scipy.spatial import cKDTree
 
-from . import timer
-from .log import tee
-from .utils import mkdir_p, which
-from . import log
+from bcfind import timer
+from bcfind.log import tee
+from bcfind.utils import mkdir_p, which
+from bcfind import log
 
 
 SHARE_DIR = os.path.dirname(log.__file__)+'/share'
