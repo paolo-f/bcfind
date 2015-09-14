@@ -10,9 +10,9 @@ import progressbar as pb
 
 from bcfind import volume
 from scipy.spatial import cKDTree
-# import scipy.ndimage.filters as filters
 from bcfind.semadec import imtensor
-from bcfind.semadec import gfilter  # extracted from the bleeding edge version of scipy
+import scipy.ndimage.filters as gfilter
+
 
 
 def inside_margin(c, substack):
