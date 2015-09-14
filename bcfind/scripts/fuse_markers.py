@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Scripts that fuse two marker files corresponding to the same substack
+Script that fuses marker files of different aligned views of the same substack
 """
 
 from __future__ import print_function
