@@ -60,7 +60,7 @@ def main(args):
     reconstruction = deconvolver.filter_volume([np_tensor_3d_first_view,np_tensor_3d_second_view], Xmean, Xstd,
                                                args.extramargin, model, args.speedup, args.do_cython)
 
-    imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz)
+    imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz, prefix='slice_')
 
     print ("total time reconstruction: %s" %(str(timeit.default_timer() - total_start)))
 
