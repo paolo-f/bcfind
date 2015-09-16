@@ -65,12 +65,12 @@ def read_tensors(args):
     return pixels_redChannel,pixels_greenChannel,pixels_blueChannel
 
 
-def fuse_tensors(args,pixels_redChannel,pixels_greenChannel,pixels_blueChannel):
+def fuse_tensors(outputdir,pixels_redChannel,pixels_greenChannel,pixels_blueChannel):
 
-    if not os.path.exists(args.outputdir):
-        os.makedirs(args.outputdir)
+    if not os.path.exists(outputdir):
+        os.makedirs(outputdir)
     else:
-        files = glob.glob(args.outputdir + '/*')
+        files = glob.glob(outputdir + '/*')
         for f in files:
             os.remove(f)
     import uuid
@@ -78,19 +78,18 @@ def fuse_tensors(args,pixels_redChannel,pixels_greenChannel,pixels_blueChannel):
     for z in xrange(0, num_slices, 1):
         pixels_merged = cv2.merge((pixels_redChannel[z], pixels_greenChannel[z], pixels_blueChannel[z]))
         im = Image.fromarray(pixels_merged)
-        #im.save(args.outputdir + '/slice_' + str(z).zfill(4) + ".tif", 'TIFF')
         tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
         im.save(tempname)
-        destname = args.outputdir+'/slice_'+str(z).zfill(4)+'.tif'
+        destname = outputdir+'/slice_'+str(z).zfill(4)+'.tif'
         os.system('tiffcp -clzw:2 ' + tempname + ' ' + destname)
         os.remove(tempname)
     print('...fusion computed (%s slices) ' %z)
-    print('fused stack saved in ', args.outputdir)
+    print('fused stack saved in ', outputdir)
 
 
 def main(args):
     pixels_redChannel, pixels_greenChannel,pixels_blueChannel=read_tensors(args)
-    fuse_tensors(args,pixels_redChannel,pixels_greenChannel,pixels_blueChannel)
+    fuse_tensors(args.outputdir,pixels_redChannel,pixels_greenChannel,pixels_blueChannel)
 
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
