@@ -1,9 +1,5 @@
 from __future__ import print_function
 
-
-import sys
-sys.path.insert(1,'/home/logos_users/paciscopi/bcfind20/bcfind')
-
 import numpy as np
 import tables
 import argparse
