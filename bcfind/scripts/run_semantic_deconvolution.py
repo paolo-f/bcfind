@@ -8,9 +8,8 @@ import cPickle as pickle
 import tables
 import numpy as np
 import timeit
-
+import re
 import sys
-sys.path.insert(1,'/home/logos_users/paciscopi/bcfind20/bcfind')
 
 
 from bcfind.volume import SubStack
@@ -26,16 +25,20 @@ def main(args):
     substack = SubStack(args.indir,args.substack_id)
     np_tensor_3d, minz = imtensor.load_nearby(args.tensorimage, substack, args.extramargin)
 
-    # Standardize volume according to mean and std found in the training set
-    print('Reading standardization data from', args.trainfile)
-    h5 = tables.openFile(args.trainfile)
-    Xmean = h5.root.Xmean[:].astype(np.float32)
-    Xstd = h5.root.Xstd[:].astype(np.float32)
-    h5.close()
+    if not args.local_mean_std:
+        # Standardize volume according to mean and std found in the training set
+        print('Reading standardization data from', args.trainfile)
+        h5 = tables.openFile(args.trainfile)
+        Xmean = h5.root.Xmean[:].astype(np.float32)
+        Xstd = h5.root.Xstd[:].astype(np.float32)
+        h5.close()
+    else:
+        Xmean=None
+        Xstd=None
+    
     print('Starting semantic devonvolution of volume', args.substack_id)
     model = pickle.load(open(args.model))
-    minz = int(substack.info['Files'][0].split('full_')[1].split('.tif')[0])
-
+    minz = int(re.split('[a-zA-z0-9]*_',substack.info['Files'][0])[1].split('.tif')[0])
     reconstruction = deconvolver.filter_volume(np_tensor_3d, Xmean, Xstd,
                                                args.extramargin, model, args.speedup, args.do_cython)
 
@@ -67,6 +70,8 @@ def get_parser():
     parser.add_argument('--speedup', metavar='speedup', dest='speedup',
                         action='store', type=int, default=4,
                         help='convolution stride (isotropic along X,Y,Z)')
+    parser.add_argument('--local_mean_std', dest='local_mean_std', action='store_true',
+                        help='computcompute mean and std locally from the substack')
     parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')
     return parser
 
