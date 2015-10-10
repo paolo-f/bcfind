@@ -56,10 +56,6 @@ def parse_transformation_file(args):
 def transform_substack(args, R, t):
 
 
-    # Create the output directory if it doesn't exist
-    if not os.path.exists(args.outdir):
-                os.makedirs(args.outdir)
-
 
     ss = SubStack(args.indir, args.substack_id)
 
@@ -109,7 +105,6 @@ def transform_substack(args, R, t):
     pixels_transformed_input = np.zeros((depth_target,height_target,width_target), dtype=np.uint8)
 
 
-
     total_start = timeit.default_timer()
 
     coords_2d_target = np.vstack(np.indices((width_target,height_target)).swapaxes(0,2).swapaxes(0,1))
@@ -142,6 +137,8 @@ def transform_substack(args, R, t):
 
 
     if args.save_tiff:
+	if not os.path.exists(args.outdir):
+		    os.makedirs(args.outdir)
         minz = int(ss.info['Files'][0].split("/")[-1].split('_')[-1].split('.tif')[0])
         _prefix = '_'.join(ss.info['Files'][0].split("/")[-1].split('_')[0:-1])+'_'
         substack_outdir = args.outdir + '/' + args.substack_id
