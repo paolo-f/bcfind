@@ -421,6 +421,17 @@ class SubStack(object):
                 tee.log('.', end='')
         tee.log(z, 'images read into stack')
 
+    def get_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None):
+	if not hasattr(self, 'imgs'):
+	    self.load_volume(convert_to_gray, flip, ignore_info_files, h5filename)
+	Depth = self.info['Depth']
+	Width = self.info['Width']
+	Height = self.info['Height']
+	patch = np.zeros((Width,Height,Depth))
+	for z in range(Depth):
+	    patch[:, :, z] = np.array(self.imgs[z]).T
+	return patch
+
     def neighbors_graph(self, C):
         X = np.array([[c.x, c.y, c.z] for c in C])
         kdtree = cKDTree(X)
