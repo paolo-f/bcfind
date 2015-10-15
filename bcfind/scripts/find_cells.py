@@ -18,7 +18,6 @@ from bcfind import volume
 def main(args):
     st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     tee.log('find_cells.py running on',platform.node(),st)
-    mkdir_p(args.outdir+'/'+args.substack_id)
     tee.logto('%s/%s/log.txt' % (args.outdir, args.substack_id))
 
     timers = [mscd.pca_analysis_timer, mscd.mean_shift_timer, mscd.ms_timer, mscd.patch_ms_timer]
@@ -27,6 +26,12 @@ def main(args):
     for t in timers:
         t.reset()
 
+    if args.pair_id is None:
+	args.outdir=args.outdir+'/'+args.substack_id
+    else:
+	args.outdir=args.outdir+'/'+args.substack_id+'/'+args.pair_id
+
+    mkdir_p(args.outdir)
     substack = volume.SubStack(args.indir, args.substack_id)
 
     substack.load_volume()
@@ -75,6 +80,9 @@ def get_parser():
     parser.add_argument('-M', '--max_expected_cells', metavar='max_expected_cells', dest='max_expected_cells',
                         action='store', type=int, default=10000,
                         help="""Max number of cells that may appear in a substack""")
+    parser.add_argument('-p', '--pair_id', dest='pair_id',
+                        action='store', type=str,
+                        help="id of the pair of views, e.g 000_090. A folder with this name will be created inside outdir/substack_id")
     parser.set_defaults(save_image=False)
     return parser
 

@@ -4,15 +4,15 @@ import numpy as np
 import tables
 import argparse
 from progressbar import *
-from bcfind.volume import *
 from scipy.spatial import cKDTree
-from bcfind.semadec import imtensor
 import scipy.ndimage.filters as gfilter
 import pandas as pd
 import os
-from bcfind.utils import Struct,mkdir_p,which
-from bcfind.scripts import transform_views
 
+from bcfind.utils import Struct,mkdir_p,which
+from bcfind.semadec import imtensor
+from bcfind.volume import *
+from multiview.rigid_transformation import * 
 
 def inside_margin(c, substack):
     m = substack.plist['Margin'] / 2
@@ -40,7 +40,6 @@ def make_pos_neg_dataset(tensor_first_view, tensor_second_view, ss, C, view1_id,
     margin = ss.plist['Margin'] / 2
 
     c_array = np.array([[c.x, c.y, c.z] for c in C])
-
 
     trunc=1.5
     fixed_radiiassigned={c:default_sigma for c in C  if inside_margin(c,ss) > 0 }
@@ -71,9 +70,9 @@ def make_pos_neg_dataset(tensor_first_view, tensor_second_view, ss, C, view1_id,
 
             target_tensor_3d =  np.maximum(np.array(target_tensor_3d_tmp * 255.0, dtype=np.uint8), target_tensor_3d)
 
-    save_tiff_files=True
+    save_debug=False
 
-    if save_tiff_files:
+    if save_debug:
         debug_path='/tmp/debug/sigma_'+str(default_sigma)
         mkdir_p(debug_path)
         minz = 0
@@ -194,18 +193,8 @@ def main(args):
 
 
         second_view_dir=args.substacks_base_path+'/'+row_data['view2']
-        args_transf=argparse.Namespace()
-        args_transf.indir=second_view_dir
-        args_transf.tensorimage=args.tensors_base_path+'/'+row_data['view2']+'.h5'
-        args_transf.log_file=args.transforms_folder+'/'+row_data['ss_id']+'/'+row_data['view1']+'_'+row_data['view2']
-        args_transf.outdir='/tmp'
-        args_transf.substack_id=row_data['ss_id']
-        args_transf.extramargin=0
-        args_transf.invert=True
-        args_transf.save_tiff=False
-        args_transf.get_tensor=True
-        R, t = transform_views.parse_transformation_file(args_transf)
-        tensor_second_view = transform_views.transform_substack(args_transf,R,t)
+        R, t = parse_transformation_file(args.transforms_folder+'/'+row_data['ss_id']+'/'+row_data['view1']+'_'+row_data['view2'])
+	tensor_second_view = transform_substack(second_view_dir, args.tensors_base_path+'/'+row_data['view2']+'.h5', row_data['ss_id'], R, t, 0, invert=True)
 
 
         temp_X_sup, temp_y_sup, temp_X_neg, temp_y_neg = make_pos_neg_dataset(tensor_first_view, tensor_second_view, substack, C,row_data['view1'],row_data['view2'], default_sigma=args.sigma,size=args.size_patch, save_tiff_files=False ,find_negative=args.negatives)
