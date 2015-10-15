@@ -14,8 +14,7 @@ import argparse
 from bcfind.volume import SubStack
 from bcfind.semadec import deconvolver
 from bcfind.semadec import imtensor
-from bcfind.scripts import transform_views
-from fuse_tensors import fuse_tensors
+from multiview.rigid_transformation import * 
 
 
 def main(args):
@@ -28,20 +27,8 @@ def main(args):
     prefix = '_'.join(ss.info['Files'][0].split("/")[-1].split('_')[0:-1])+'_'
 
     np_tensor_3d_first_view,_  = imtensor.load_nearby(args.tensorimage_first_view, ss, 0)
-
-    args_transf=argparse.Namespace()
-    args_transf.indir=args.second_view_dir
-    args_transf.tensorimage=args.tensorimage_second_view
-    args_transf.log_file=args.log_file
-    args_transf.outdir=''
-    args_transf.substack_id=args.substack_id
-    args_transf.extramargin=0
-    args_transf.invert=True
-    args_transf.save_tiff=False
-    args_transf.get_tensor=True
-    R, t = transform_views.parse_transformation_file(args_transf)
-    np_tensor_3d_second_view = transform_views.transform_substack(args_transf,R,t)
-
+    R, t = parse_transformation_file(args.transformation_file)
+    np_tensor_3d_second_view = transform_substack(args.second_view_dir, args.tensorimage_second_view, args.substack_id, R, t, 0, invert=True, save_tiff=True)
     fuse_tensors(args.outdir, np_tensor_3d_first_view,np_tensor_3d_second_view,np.zeros_like(np_tensor_3d_first_view).astype(np.uint8))
     print ("total time transformation and fusion: %s" %(str(timeit.default_timer() - total_start)))
 

@@ -5,7 +5,6 @@ Script that creates a training set for semantic deconvolution.
 from __future__ import print_function
 
 import sys
-
 import cPickle as pickle
 import tables
 import timeit
@@ -15,8 +14,7 @@ import argparse
 from bcfind.volume import SubStack
 from bcfind.semadec import deconvolver
 from bcfind.semadec import imtensor
-from bcfind.scripts import transform_views
-
+from multiview.rigid_transformation import * 
 
 
 def main(args):
@@ -29,20 +27,13 @@ def main(args):
     prefix = '_'.join(ss.info['Files'][0].split("/")[-1].split('_')[0:-1])+'_'
 
     np_tensor_3d_first_view,_  = imtensor.load_nearby(args.tensorimage_first_view, ss, args.extramargin)
+    if args.transformation_file is not None:
+	R, t = parse_transformation_file(args.transformation_file)
+    else:
+	R=np.eye(3,dtype=np.float)
+	t=np.zeros(3,dtype=np.float)
 
-    args_transf=argparse.Namespace()
-    args_transf.indir=args.second_view_dir
-    args_transf.tensorimage=args.tensorimage_second_view
-    args_transf.log_file=args.log_file
-    args_transf.outdir='/tmp'
-    args_transf.substack_id=args.substack_id
-    args_transf.extramargin=args.extramargin
-    args_transf.invert=True
-    args_transf.save_tiff=False
-    args_transf.get_tensor=True
-    R, t = transform_views.parse_transformation_file(args_transf)
-    np_tensor_3d_second_view = transform_views.transform_substack(args_transf,R,t)
-
+    np_tensor_3d_second_view = transform_substack(args.second_view_dir, args.tensorimage_second_view, args.substack_id, R, t, args.extramargin, invert=True)
 
     print('Loading model...')
     model = pickle.load(open(args.model))
@@ -59,7 +50,13 @@ def main(args):
     reconstruction = deconvolver.filter_volume([np_tensor_3d_first_view,np_tensor_3d_second_view], Xmean, Xstd,
                                                args.extramargin, model, args.speedup, args.do_cython)
 
-    imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz, prefix='slice_')
+    if args.pair_id is None:
+	outdir=args.outdir+'/'+args.substack_id
+    else:
+	outdir=args.outdir+'/'+args.substack_id+'/'+args.pair_id
+
+    imtensor.save_tensor_as_tif(reconstruction, outdir, minz, prefix='slice_')
+
 
     print ("total time reconstruction: %s" %(str(timeit.default_timer() - total_start)))
 
@@ -83,16 +80,19 @@ def get_parser():
                         help='pickle file containing a trained network')
     parser.add_argument('trainfile', metavar='trainfile', type=str,
                         help='HDF5 file on which the network was trained (should contain mean/std arrays)')
-    parser.add_argument('log_file', metavar='log_file', type=str,
-                        help='Transformation log file')
     parser.add_argument('outdir', metavar='outdir', type=str,
                         help='where preprocessed volume will be saved')
+    parser.add_argument('--transformation_file', metavar='transformation_file', type=str,
+                        help='Transformation log file')
     parser.add_argument('--extramargin', dest='extramargin',
                         action='store', type=int, default=4,
                         help='Input and output patches are cubes of side (2*size+1)**3')
     parser.add_argument('--speedup', metavar='speedup', dest='speedup',
                         action='store', type=int, default=4,
                         help='convolution stride (isotropic along X,Y,Z)')
+    parser.add_argument('-p', '--pair_id', dest='pair_id',
+                        action='store', type=str,
+                        help="id of the pair of views, e.g 000_090. A folder with this name will be created inside outdir/substack_id")
     parser.add_argument('--local_mean_std', dest='local_mean_std', action='store_true',
                         help='computcompute mean and std locally from the substack')
     parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')

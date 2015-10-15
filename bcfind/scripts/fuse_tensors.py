@@ -12,6 +12,8 @@ import glob
 import cv2
 import argparse
 
+from multiview.rigid_transformation import fuse_tensors
+
 
 def read_tensors(args):
 
@@ -63,28 +65,6 @@ def read_tensors(args):
         print('...read the third tensor (%s slices)' %z)
 
     return pixels_redChannel,pixels_greenChannel,pixels_blueChannel
-
-
-def fuse_tensors(outputdir,pixels_redChannel,pixels_greenChannel,pixels_blueChannel):
-
-    if not os.path.exists(outputdir):
-        os.makedirs(outputdir)
-    else:
-        files = glob.glob(outputdir + '/*')
-        for f in files:
-            os.remove(f)
-    import uuid
-    num_slices=pixels_redChannel.shape[0]
-    for z in xrange(0, num_slices, 1):
-        pixels_merged = cv2.merge((pixels_redChannel[z], pixels_greenChannel[z], pixels_blueChannel[z]))
-        im = Image.fromarray(pixels_merged)
-        tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
-        im.save(tempname)
-        destname = outputdir+'/slice_'+str(z).zfill(4)+'.tif'
-        os.system('tiffcp -clzw:2 ' + tempname + ' ' + destname)
-        os.remove(tempname)
-    print('...fusion computed (%s slices) ' %z)
-    print('fused stack saved in ', outputdir)
 
 
 def main(args):
