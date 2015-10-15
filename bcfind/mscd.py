@@ -11,6 +11,7 @@ from sklearn.utils import extmath
 from scipy.spatial import cKDTree
 from collections import namedtuple
 from scipy.ndimage.filters import gaussian_filter
+from os.path import abspath,dirname
 
 from . import volume
 from . import threshold
@@ -221,26 +222,23 @@ def ms(substack, args):
         C.append(c)
         tee.log(i, cc, c)
 
-    filename = args.outdir+'/'+substack.substack_id+'/ms.marker'
+    
+    filename = args.outdir+'/ms.marker'
     substack.save_markers(filename, C, floating_point=args.floating_point)
     tee.log('Markers saved to', filename)
-    filename = args.outdir+'/'+substack.substack_id+'/seeds.marker'
+    filename = args.outdir+'/seeds.marker'
     substack.save_markers(filename, seeds)
     tee.log(len(seeds), 'seeds saved to', filename)
 
+    up_outdir=dirname(abspath(args.outdir))
     if args.save_image:
-        image_saver = volume.ImageSaver(args.outdir, substack, C)
+        image_saver = volume.ImageSaver(up_outdir, substack, C)
         Lx = [int(x) for x in L[:,0]]
         Ly = [int(y) for y in L[:,1]]
         Lz = [int(z) for z in L[:,2]]
         image_saver.save_above_threshold(Lx, Ly, Lz)
 
-        #Lcluster = [C[int(labels[i])] for i in xrange(len(L))]
-        ## Note: no trajectories in this case
-        #image_saver.save_vaa3d(C, Lx, Ly, Lz, Lcluster,
-                               #draw_centers=True, colorize_voxels=True,
-                               #floating_point=args.floating_point)
-        tee.log('Debugging images saved in', args.outdir)
+        tee.log('Debugging images saved in',up_outdir)
     else:
         tee.log('Debugging images not saved')
 
@@ -394,29 +392,23 @@ def pms(substack, args):
         c.mass = masses[i]
         tee.log(i, cc, c)
         C.append(c)
-
-    filename = args.outdir+'/'+substack.substack_id+'/ms.marker'
+    
+    filename = args.outdir+'/ms.marker'
     substack.save_markers(filename, C, floating_point=args.floating_point)
     tee.log('Markers saved to', filename)
-    filename = args.outdir+'/'+substack.substack_id+'/seeds.marker'
-    substack.save_markers(args.outdir+'/'+substack.substack_id+'/seeds.marker', seeds)
+    filename = args.outdir+'/seeds.marker'
+    substack.save_markers(filename, seeds)
     tee.log(len(seeds), 'seeds saved to', filename)
 
+    up_outdir=dirname(abspath(args.outdir))
     if args.save_image:
-        image_saver = volume.ImageSaver(args.outdir, substack, C)
+        image_saver = volume.ImageSaver(up_outdir, substack, C)
         Lx = [int(x) for x in L[:,0]]
         Ly = [int(y) for y in L[:,1]]
         Lz = [int(z) for z in L[:,2]]
-        image_saver.save_above_threshold(Lx,Ly,Lz)
-        print(len(C),max(labels),min(labels))
+        image_saver.save_above_threshold(Lx, Ly, Lz)
 
-        Lcluster = [C[int(labels[i])] for i in xrange(len(L))]
-        # Note: no trajectories in this case
-        image_saver.save_vaa3d(C, Lx, Ly, Lz, Lcluster,
-                               draw_centers=True,
-                               colorize_voxels=True,
-                               floating_point=args.floating_point)
-        tee.log('Debugging images saved in', args.outdir)
+        tee.log('Debugging images saved in',up_outdir)
     else:
         tee.log('Debugging images not saved')
 
