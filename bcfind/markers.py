@@ -2,8 +2,9 @@ import math
 import networkx
 from scipy.spatial.distance import cdist 
 import numpy as np
+
 from bcfind.volume import Center
-from bcfind.scripts.rotate_stacks import rigidMotionEstimation
+from multiview.coarse_registration import horn_method
 
 def distance((x1,y1,z1),(x2,y2,z2)):
     return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
@@ -101,7 +102,7 @@ def match_markers_with_icp(C1,C2, max_distance,num_iterations = 100, eps=1e-8, v
         
         weights=1./(np.array(distances)+1) 
         if len(c2_good) >3.:
-            R,t,_,_,_ =rigidMotionEstimation(c2_good, c1_good, weights)
+            R,t,_,_,_ =horn_method(c2_good, c1_good, weights)
         else:
             break
         c2=np.dot(R,c2.T).T+t
