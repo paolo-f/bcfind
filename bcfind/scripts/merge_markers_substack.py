@@ -36,12 +36,14 @@ def compute_fusion(substack,C1,C2,max_distance, match_distance=None, verbose=Fal
 def transform_markers(args,substack,C_moving,view_ids):
     if isfile(join(args.dir_registration,args.substack_id,view_ids[0]+'_'+view_ids[2])):
 	view=view_ids[0]+'_'+view_ids[2]
+        args.substack_id = substack.substack_id
+        R,t=parse_transformation_file(join(args.dir_registration,args.substack_id,view))
     elif isfile(join(args.dir_registration,args.substack_id,view_ids[1]+'_'+view_ids[3])):
 	view=view_ids[1]+'_'+view_ids[3]
+        args.substack_id = substack.substack_id
+        R,t=parse_transformation_file(join(args.dir_registration,args.substack_id,view))
     else:
-        raise Exception('Transformation file does not exist')
-    args.substack_id = substack.substack_id
-    R,t=parse_transformation_file(join(args.dir_registration,args.substack_id,view))
+        return C_moving
     C_moving_t=[]
     t = -np.dot(R.T, t)
     R=R.T
