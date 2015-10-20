@@ -36,7 +36,7 @@ def main(args):
     print('Loading model...')
     model = pickle.load(open(args.model))
 
-    if not args.local_mean_std:
+    if args.trainfile is not None:
         h5 = tables.openFile(args.trainfile)
         Xmean = h5.root.Xmean[:].astype(np.float32)
         Xstd = h5.root.Xstd[:].astype(np.float32)
@@ -76,10 +76,10 @@ def get_parser():
                         help='substack identifier, e.g. 010608')
     parser.add_argument('model', metavar='model', type=str,
                         help='pickle file containing a trained network')
-    parser.add_argument('trainfile', metavar='trainfile', type=str,
-                        help='HDF5 file on which the network was trained (should contain mean/std arrays)')
     parser.add_argument('outdir', metavar='outdir', type=str,
                         help='where preprocessed volume will be saved')
+    parser.add_argument('--trainfile', metavar='trainfile', type=str,
+                        help='HDF5 file on which the network was trained (should contain mean/std arrays)')
     parser.add_argument('--transformation_file', metavar='transformation_file', type=str,
                         help='Transformation log file')
     parser.add_argument('--extramargin', dest='extramargin',
@@ -91,8 +91,6 @@ def get_parser():
     parser.add_argument('-p', '--pair_id', dest='pair_id',
                         action='store', type=str,
                         help="id of the pair of views, e.g 000_090. A folder with this name will be created inside outdir/substack_id")
-    parser.add_argument('--local_mean_std', dest='local_mean_std', action='store_true',
-                        help='computcompute mean and std locally from the substack')
     parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')
     return parser
 
