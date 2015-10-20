@@ -160,9 +160,10 @@ def compute_data_mean_std(list_tensors,extramargin,speedup,do_cython,rangex,rang
                     i += 1
 
     std_start = timeit.default_timer()
-    indices_above_mean=np.mean(data[:,]*255,axis=1)>5
-    Xmean=data[indices_above_mean].mean(axis=0).astype(np.float32)
-    Xstd=data[indices_above_mean].std(axis=0).astype(np.float32)
+    #good_indices=np.mean(data[:,]*255,axis=1)>5
+    good_indices=range(0,data.shape[0],extramargin**3)
+    Xmean=data[good_indices].mean(axis=0).astype(np.float32)
+    Xstd=data[good_indices].std(axis=0).astype(np.float32)
 
     return data,Xmean,Xstd
 
