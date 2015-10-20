@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 """
-Merges marker files from several substacks into a single file.
+Script that merges marker files of all the available registered views of a substack and fuse them in a single file.
 """
+
 import argparse
 import math
 from bcfind.volume import SubStack,Center

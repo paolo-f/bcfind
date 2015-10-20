@@ -1,5 +1,9 @@
-from __future__ import print_function
+#!/usr/bin/env python
+"""
+Creates a multi-view dataset for supervised training
+"""
 
+from __future__ import print_function
 import numpy as np
 import tables
 import argparse
@@ -246,9 +250,8 @@ def main(args):
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(description="""
-    Creates a data set for supervised training on two views of 3D patches
-    """, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser = argparse.ArgumentParser(description=__doc__,
+            formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('list_trainset', metavar='list_trainset', type=str,
                         help='csv file of merged markers of the trainset')
     parser.add_argument('substacks_base_path', metavar='substacks_base_path', type=str,

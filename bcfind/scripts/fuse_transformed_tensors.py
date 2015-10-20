@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Script that transforms an input tensor and fuses it with a reference volume
+Script that applies a rigid transformation to an input volume  and fuses it with a reference volume
 """
-from __future__ import print_function
 
+from __future__ import print_function
 import sys
 import cPickle as pickle
 import tables

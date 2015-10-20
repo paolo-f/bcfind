@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-
 """
 Scripts that fuse 3D greyscale tensors in a 3D RGB tensor
 """
-__author__ = 'paciscopi'
 
 import numpy as np
 import os

@@ -1,11 +1,16 @@
 #!/usr/bin/env python
 """
 Script that fuses two 3D greyscale tensors in a unique 3D greyscale output tensor.
-The algorithm is based on the local entropy estimation of both the tensors.
+The algorithm is based on the local entropy estimation.
+
+References
+----------
+Preibisch, S., Rohlfing, T., Hasak, M.P., Tomancak, P.: Mosaicing of single plane illumination
+microscopy images using groupwise registration and fast content-based image fusion. In:
+J.M. Reinhardt, J.P.W. Pluim (eds.) Proc. SPIE Conference on Medical Imaging, vol. 6914 (2008)
 """
 
 from __future__ import print_function
-
 from bcfind.volume import SubStack
 from bcfind.semadec import imtensor
 from bcfind import local_entropy

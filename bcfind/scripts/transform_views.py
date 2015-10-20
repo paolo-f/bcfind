@@ -1,10 +1,7 @@
 #!/usr/bin/env python
-
 """
-This script executes a rigid transformation to a 3D tensor
-
+This script applies a rigid transformation to a substack
 """
-__author__ = 'paciscopi'
 
 import numpy as np
 import os

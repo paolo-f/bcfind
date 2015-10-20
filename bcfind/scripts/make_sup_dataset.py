@@ -2,6 +2,7 @@
 """
 Creates a training set for semantic deconvolution.
 """
+
 from __future__ import print_function
 import numpy as np
 import tables

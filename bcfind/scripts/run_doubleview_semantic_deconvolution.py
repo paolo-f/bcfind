@@ -2,8 +2,8 @@
 """
 Script that creates a training set for semantic deconvolution.
 """
-from __future__ import print_function
 
+from __future__ import print_function
 import sys
 import cPickle as pickle
 import tables
