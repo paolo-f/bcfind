@@ -25,3 +25,4 @@ bcfind/scripts/make_sup_oneview_dataset.py
 bcfind/scripts/run_multiview_semantic_deconvolution.py
 bcfind/scripts/run_oneview_semantic_deconvolution.py
 bcfind/scripts/run_singleview_semantic_deconvolution.py
+pyl2/joinviews_columnar.py
