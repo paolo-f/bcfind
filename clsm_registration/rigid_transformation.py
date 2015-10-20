@@ -18,6 +18,23 @@ from bcfind.utils import mkdir_p
 from bcfind.semadec import imtensor
 
 def parse_transformation_file(transformation_file):
+    """
+    Method that parses the file reporting the rigid transformation, estimated after the fine registration procedure .
+
+    Parameters
+    ----------
+    
+    transformation_file: str
+	file reporting the estimated rigid transfrormation
+
+    Returns
+    -------
+
+    R : numpy array of shape (3, 3)
+	rotational component of the estimated rigid transformation
+    t : numpy array of shape (3)
+	translational component of the estimated rigid transformation
+    """
     scientific_notation = "e-" + Word(nums)
     float_number = Combine(Optional("-") + Word(nums) + Optional("." + Word(nums) + Optional(scientific_notation) ))
     row_matrix =  Group(float_number + float_number + float_number)
@@ -40,7 +57,41 @@ def parse_transformation_file(transformation_file):
 
     return R, t
 
-def transform_substack(indir, tensorimage, substack_id, R, t, extramargin, outdir='', invert=False, save_tiff=False, save_hdf5=False):
+def transform_substack(indir, tensorimage, substack_id, R, t, extramargin, outdir=None, invert=False, save_tiff=False, save_hdf5=False):
+    """
+    Method that estimates the rigid transformation between two marker files.
+
+    Parameters
+    ----------
+    
+    indir : str
+	path of the substacks folder of the input view
+    tensorimage : str
+	hdf5 file of the input tensor
+    substack_id : str
+	id of the substacks that will be transformed
+    R : numpy array of shape (3, 3)
+	rotational component of the estimated rigid transformation
+    t : numpy array of shape (3)
+	translational component of the estimated rigid transformation
+    extramargin : int
+	extramargin used to obtain the transformed tensor
+    outdir : str 
+	output directory where the transformed substack will be saved (Default: None)
+    invert : boolean 
+	if True the tranformation is inverted (Default: False)
+    save_tiff : boolean 
+	save the transformed substack in stack of tif slices (Default: False)
+    save_hdf5 : boolean 
+	save the transformed substack in hdf5 format (Default: False)
+
+    Returns
+    -------
+
+    pixels_transformed_input: numpy tensor
+	tensor of the transformed substack
+
+    """
     ss = SubStack(indir, substack_id)
     input_stack_file = tensorimage
     hf5 = tables.openFile(input_stack_file, 'r')
@@ -129,6 +180,21 @@ def transform_substack(indir, tensorimage, substack_id, R, t, extramargin, outdi
     return pixels_transformed_input
 
 def fuse_tensors(outdir,pixels_redChannel,pixels_greenChannel,pixels_blueChannel):
+    """
+    Method that fuses multiple tensors in a RGB tensor
+
+    Parameters
+    ----------
+    
+    pixels_redChannel: numpy tensor
+	numpy tensor of the first view (R channel)
+    pixels_greeChannel: numpy tensor
+	numpy tensor of the second view (G channel)
+    pixels_blueChannel: numpy tensor
+	numpy tensor of the third view (B channel)
+    outdir: str
+	directory where the output tensor will be saved
+    """
     mkdir_p(outdir)
     num_slices=pixels_redChannel.shape[0]
     for z in xrange(0, num_slices, 1):

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 __author__ = 'paciscopi'
 
 import numpy as np
@@ -14,17 +15,72 @@ from progressbar import *
 
 
 #Arun algorithm
-def arun_method(src, dst): # Assumes both or Nx3 matrices
-    src_mean = src.mean(0)
-    dst_mean = dst.mean(0)
+def arun_method(X, T): # Assumes both or Nx3 matrices
+    """
+    Method that estimates a rigid transformation between two point sets, 
+    solving  a constrained least squares problem,
+    based on the computation of the Singular Value Decomposition (SVD)
+
+    Parameters
+    ----------
+
+    X : numpy array of shape (n_points, 3)
+	source point cloud
+    T : numpy array of shape (n_points, 3)
+	target point cloud
+
+    Returns
+    -------
+
+    R : numpy array of shape (3, 3)
+	rotational component of the estimated rigid transformation
+    t : numpy array of shape (3)
+	translational component of the estimated rigid transformation
+
+    References
+    ----------
+    Arun, K.S., Huang, T.S., Blostein, S.D.: Least-squares fitting of two 3-D point sets. Pattern
+    Analysis and Machine Intelligence, IEEE Transactions on (5), 698–700 (1987).
+    """
+    X_mean = X.mean(0)
+    T_mean = T.mean(0)
     # Compute covariance
-    H = reduce(lambda s, (a,b) : s + np.outer(a, b), zip(src - src_mean, dst - dst_mean), np.zeros((3,3)))
+    H = reduce(lambda s, (a,b) : s + np.outer(a, b), zip(X - X_mean, T - T_mean), np.zeros((3,3)))
     u, s, v = np.linalg.svd(H)
     R = v.T.dot(u.T) # Rotation
-    t = - R.dot(src_mean) + dst_mean # Translation
+    t = - R.dot(X_mean) + T_mean # Translation
     return R,t
 
-def do_ransac(X, T, mss=3, max_iterations=10000, tolerance=5.0):
+def do_ransac(X, T, mss=3, max_iterations=1000, tolerance=3.0):
+    """
+    Method that estimates the rigid transformation (Horn Method) between 3D Points using RANSAC.
+
+    Parameters
+    ----------
+
+    X : numpy array of shape (n_points, 3)
+	source point cloud
+    T : numpy array of shape (n_points, 3)
+	target point cloud
+    mss : int
+	minimal sample set to build the model (Default: 3)
+    max_iteration: int
+	maximum number of iterations of the RANSAC procedure (Default: 1000)
+    tolerance: float
+	Error tolerance (Default: 3.0)
+
+    Returns
+    -------
+
+    id_inliers: indices of the pairs of points belonging to the consensus set
+
+
+    References
+    ----------
+    Fischler, M.A., Bolles, R.C.: Random sample consensus: a paradigm for model fitting with
+    applications to image analysis and automated cartography. Communications of the ACM
+    24(6), 381–395 (1981)
+    """
     consensus_set = 0
     consensus_threshold = X.shape[0]
     best_w = np.ones((1, X.shape[0]), dtype=np.double)
@@ -40,7 +96,26 @@ def do_ransac(X, T, mss=3, max_iterations=10000, tolerance=5.0):
                 break
     return id_inliers
 
-def findBestRigidBodyEstimation(markers_input, markers_output):
+def findBestRigidBodyEstimation(markers_input, markers_target):
+    """
+    Method that estimates the rigid transformation between two marker files.
+
+    Parameters
+    ----------
+    
+    markers_input: str
+	filename of the list of markers, extracted from the input view
+    markers_output: str
+	filename of the list of markers, extracted from the target view
+
+    Returns
+    -------
+
+    R : numpy array of shape (3, 3)
+	rotational component of the estimated rigid transformation, after computing RANSAC
+    t : numpy array of shape (3)
+	translational component of the estimated rigid transformation, after computing RANSAC
+    """
 
     grammar = ('#' + restOfLine).suppress() | Group(Combine(Word(nums) + Optional("." + Word(nums))) + Suppress(",") + Combine(Word(nums) + Optional("." + Word(nums))) + Suppress(",") + Combine(Word(nums) + Optional("." + Word(nums)))) + restOfLine.suppress()
 
@@ -52,7 +127,7 @@ def findBestRigidBodyEstimation(markers_input, markers_output):
             X.append(np.array(parsed_line[0][:]).astype(np.float))
     X = np.array(X)
 
-    f = open(markers_output, 'r')
+    f = open(markers_target, 'r')
     T = []
     for line in f:
         parsed_line = grammar.parseString(line)
@@ -69,8 +144,33 @@ def findBestRigidBodyEstimation(markers_input, markers_output):
     return R, t
 
 
-#Horn algorithm
 def horn_method(X, T, weights, verbose=False):
+    """
+    Method, based on quaternions, that estimates a rigid transformation between two point sets, 
+    solving  a weighted constrained least squares problem
+
+    Parameters
+    ----------
+
+    X : numpy array of shape (n_points, 3)
+	source point cloud
+    T : numpy array of shape (n_points, 3)
+	target point cloud
+
+    Returns
+    -------
+
+    R : numpy array of shape (3, 3)
+	rotational component of the estimated rigid transformation
+    t : numpy array of shape (3)
+	translational component of the estimated rigid transformation
+
+    References
+    ----------
+    Horn, B.K.P., Hilden, H., Negahdaripour, S.: Closed-form solution of absolute orientation
+    using orthonormal matrices. JOURNAL OF THE OPTICAL SOCIETY AMERICA 5(7), 1127–
+    1135 (1988)
+    """
     normalized_weights = weights / np.sum(weights)
 
     normalized_centroid_X = np.dot(np.transpose(X), normalized_weights)
@@ -164,7 +264,28 @@ def horn_method(X, T, weights, verbose=False):
 
 
 def apply_transform(input_view, target_view, transformed_view, R, t, suffix='.tif', convert_to_gray=True):
+    """
+    Method that applies a previously estimated rigid transformation to an input view
+    
+    Parameters
+    ----------
 
+    input_view : str
+	directory of hdf5 file of the input view
+    target_view : str
+	directory of hdf5 file of the target view
+    transformed_view : str
+	directory of hdf5 file of the transformed input view
+    R : numpy array of shape (dim_points, 3)
+	rotational component of the estimated rigid transformation
+    t : numpy array of shape (3)
+	translational component of the estimated rigid transformation
+    suffix : str
+	suffix of the slice images (Default: '.tif')
+    convert_to_gray: boolean
+	if True the slices are read and saved in greyscale (Default: True)
+
+    """
     t_start = timeit.default_timer()
 
     if (os.path.isdir(target_view)):
