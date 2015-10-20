@@ -14,7 +14,7 @@ import argparse
 from bcfind.volume import SubStack
 from bcfind.semadec import deconvolver
 from bcfind.semadec import imtensor
-from multiview.rigid_transformation import * 
+from clsm_registration.rigid_transformation import * 
 
 
 def main(args):
@@ -29,11 +29,9 @@ def main(args):
     np_tensor_3d_first_view,_  = imtensor.load_nearby(args.tensorimage_first_view, ss, args.extramargin)
     if args.transformation_file is not None:
 	R, t = parse_transformation_file(args.transformation_file)
+        np_tensor_3d_second_view = transform_substack(args.second_view_dir, args.tensorimage_second_view, args.substack_id, R, t, args.extramargin, invert=True)
     else:
-	R=np.eye(3,dtype=np.float)
-	t=np.zeros(3,dtype=np.float)
-
-    np_tensor_3d_second_view = transform_substack(args.second_view_dir, args.tensorimage_second_view, args.substack_id, R, t, args.extramargin, invert=True)
+        np_tensor_3d_second_view,_  = imtensor.load_nearby(args.tensorimage_second_view, ss, args.extramargin)
 
     print('Loading model...')
     model = pickle.load(open(args.model))
