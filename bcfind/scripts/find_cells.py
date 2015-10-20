@@ -18,7 +18,15 @@ from bcfind import volume
 def main(args):
     st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     tee.log('find_cells.py running on',platform.node(),st)
-    tee.logto('%s/%s/log.txt' % (args.outdir, args.substack_id))
+
+    mkdir_p(args.outdir+'/'+args.substack_id)
+    if args.pair_id is None:
+        tee.logto('%s/%s/log.txt' % (args.outdir, args.substack_id))
+	args.outdir=args.outdir+'/'+args.substack_id
+    else:
+        tee.logto('%s/%s/log_%s.txt' % (args.outdir, args.substack_id, args.pair_id))
+	args.outdir=args.outdir+'/'+args.substack_id+'/'+args.pair_id
+        mkdir_p(args.outdir)
 
     timers = [mscd.pca_analysis_timer, mscd.mean_shift_timer, mscd.ms_timer, mscd.patch_ms_timer]
     timers.extend([volume.save_vaa3d_timer, volume.save_markers_timer])
@@ -26,15 +34,9 @@ def main(args):
     for t in timers:
         t.reset()
 
-    if args.pair_id is None:
-	args.outdir=args.outdir+'/'+args.substack_id
-    else:
-	args.outdir=args.outdir+'/'+args.substack_id+'/'+args.pair_id
 
-    mkdir_p(args.outdir)
     substack = volume.SubStack(args.indir, args.substack_id)
-
-    substack.load_volume()
+    substack.load_volume(pair_id=args.pair_id)
     if args.local:
         mscd.pms(substack, args)
     else:
