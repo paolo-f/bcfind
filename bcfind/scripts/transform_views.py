@@ -11,7 +11,7 @@ import os
 import sys
 from pyparsing import Word, alphanums,nums, restOfLine, Suppress, Group, Combine, Optional
 import argparse
-from multiview.rigid_transformation import * 
+from clsm_registration.rigid_transformation import * 
 
 
 def get_parser():

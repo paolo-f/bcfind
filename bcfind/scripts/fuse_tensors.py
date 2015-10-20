@@ -12,7 +12,7 @@ import glob
 import cv2
 import argparse
 
-from multiview.rigid_transformation import fuse_tensors
+from clsm_registration.rigid_transformation import fuse_tensors
 
 
 def read_tensors(args):

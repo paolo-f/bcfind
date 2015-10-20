@@ -9,7 +9,7 @@ import numpy as np
 import timeit
 import argparse
 
-from multiview.coarse_registration import * 
+from clsm_registration.coarse_registration import * 
 
 
 

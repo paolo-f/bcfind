@@ -12,7 +12,7 @@ import os
 from bcfind.utils import Struct,mkdir_p,which
 from bcfind.semadec import imtensor
 from bcfind.volume import *
-from multiview.rigid_transformation import * 
+from clsm_registration.rigid_transformation import * 
 
 def inside_margin(c, substack):
     m = substack.plist['Margin'] / 2
