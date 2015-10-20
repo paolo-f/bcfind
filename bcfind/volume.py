@@ -379,7 +379,7 @@ class SubStack(object):
             self.pixels.append(img_z.load())
         tee.log(z+1, 'images read into stack (from h5 file)')
 
-    def load_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None):
+    def load_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None, pair_id=None):
         """Loads a sequence of images into a stack
 
         Parameters
@@ -398,11 +398,12 @@ class SubStack(object):
             return
         self.imgs = []
         self.pixels = []
-        if ignore_info_files:
+	if pair_id is not None:
+            idir = self.indir+'/'+self.substack_id+'/'+pair_id
+            files = sorted([idir+'/'+f for f in os.listdir(idir) if f[0] != '.' and valid_suffix(f)])
+        elif ignore_info_files:
             idir = self.indir+'/'+self.substack_id
             files = sorted([idir+'/'+f for f in os.listdir(idir) if f[0] != '.' and valid_suffix(f)])
-            # print('******* These are the files in',idir)
-            # print(files)
         else:
             files = [self.indir+'/'+fname for fname in self.info['Files']]
         if len(files) == 0:
