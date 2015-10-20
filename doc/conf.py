@@ -121,7 +121,7 @@ pygments_style = 'sphinx'
 #_____________________________
 html_theme_path = ['_themes/mozilla-sphinx-theme/mozilla_sphinx_theme']
 html_theme = 'mozilla'
-pygments_style = 'solarizeddark'
+pygments_style = 'solarized'
 #_____________________________
 
 # The name for this set of Sphinx documents.  If None, it defaults to
