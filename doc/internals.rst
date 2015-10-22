@@ -124,3 +124,22 @@ manifold.SurfaceCleaner
   :members:
   :undoc-members:
   :show-inheritance:
+
+clsm_registration.coarse_registration
+-------------
+
+.. automodule:: clsm_registration.coarse_registration
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+------------------------------------
+
+clsm_registration.rigid_transformation
+-----------
+
+.. automodule:: clsm_registration.rigid_transformation
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
