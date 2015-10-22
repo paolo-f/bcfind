@@ -27,7 +27,6 @@ def main(args):
     np_tensor_3d, minz = imtensor.load_nearby(args.tensorimage, substack, args.extramargin)
 
     if not args.local_mean_std:
-        # Standardize volume according to mean and std found in the training set
         print('Reading standardization data from', args.trainfile)
         h5 = tables.openFile(args.trainfile)
         Xmean = h5.root.Xmean[:].astype(np.float32)
@@ -41,7 +40,7 @@ def main(args):
     model = pickle.load(open(args.model))
     minz = int(re.split('[a-zA-z0-9]*_',substack.info['Files'][0])[1].split('.tif')[0])
     reconstruction = deconvolver.filter_volume(np_tensor_3d, Xmean, Xstd,
-                                               args.extramargin, model, args.speedup, args.do_cython)
+                                               args.extramargin, model, args.speedup, do_cython=args.do_cython, trainfile=args.trainfile)
 
     imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz)
 
