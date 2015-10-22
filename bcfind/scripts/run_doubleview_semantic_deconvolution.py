@@ -10,6 +10,7 @@ import tables
 import timeit
 import numpy as np
 import argparse
+from os.path import basename
 
 from bcfind.volume import SubStack
 from bcfind.semadec import deconvolver
@@ -35,8 +36,8 @@ def main(args):
 
     print('Loading model...')
     model = pickle.load(open(args.model))
-
-    if args.trainfile is not None:
+    
+    if not args.local_mean_std:
         h5 = tables.openFile(args.trainfile)
         Xmean = h5.root.Xmean[:].astype(np.float32)
         Xstd = h5.root.Xstd[:].astype(np.float32)
@@ -46,12 +47,10 @@ def main(args):
         Xstd=None
 
     reconstruction = deconvolver.filter_volume([np_tensor_3d_first_view,np_tensor_3d_second_view], Xmean, Xstd,
-                                               args.extramargin, model, args.speedup, args.do_cython)
+                                               args.extramargin, model, args.speedup, do_cython=args.do_cython,trainfile=args.trainfile)
 
-    if args.pair_id is None:
-	outdir=args.outdir+'/'+args.substack_id
-    else:
-	outdir=args.outdir+'/'+args.substack_id+'/'+args.pair_id
+    pair_id = basename(args.first_view_dir)+ '_' +basename(args.second_view_dir)
+    outdir=args.outdir+'/'+args.substack_id+'/'+pair_id
 
     imtensor.save_tensor_as_tif(reconstruction, outdir, minz, prefix='slice_')
 
@@ -76,10 +75,10 @@ def get_parser():
                         help='substack identifier, e.g. 010608')
     parser.add_argument('model', metavar='model', type=str,
                         help='pickle file containing a trained network')
+    parser.add_argument('trainfile', metavar='trainfile', type=str,
+                        help='HDF5 file on which the network was trained (should contain mean/std arrays)')
     parser.add_argument('outdir', metavar='outdir', type=str,
                         help='where preprocessed volume will be saved')
-    parser.add_argument('--trainfile', metavar='trainfile', type=str,
-                        help='HDF5 file on which the network was trained (should contain mean/std arrays)')
     parser.add_argument('--transformation_file', metavar='transformation_file', type=str,
                         help='Transformation log file')
     parser.add_argument('--extramargin', dest='extramargin',
@@ -88,9 +87,7 @@ def get_parser():
     parser.add_argument('--speedup', metavar='speedup', dest='speedup',
                         action='store', type=int, default=4,
                         help='convolution stride (isotropic along X,Y,Z)')
-    parser.add_argument('-p', '--pair_id', dest='pair_id',
-                        action='store', type=str,
-                        help="id of the pair of views, e.g 000_090. A folder with this name will be created inside outdir/substack_id")
+    parser.add_argument('--local_mean_std', dest='local_mean_std', action='store_true', help='use the compiled cython modules in deconvolver.py')
     parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')
     return parser
 
