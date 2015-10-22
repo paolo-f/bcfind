@@ -113,7 +113,7 @@ def make_predictor(model):
 
 
 
-def compute_data_mean_std(list_tensors,extramargin,speedup,do_cython,rangex,rangey,rangez,patchlen,shape_tensor):
+def compute_data_mean_std(list_tensors,extramargin,speedup,do_cython,rangex,rangey,rangez,patchlen,shape_tensor,trainfile):
 
 
     print('Patch size: %dx%dx%d (%d)' % (1+2*extramargin, 1+2*extramargin, 1+2*extramargin, (1+2*extramargin)**3))
@@ -159,11 +159,16 @@ def compute_data_mean_std(list_tensors,extramargin,speedup,do_cython,rangex,rang
                     data[i]=data_slice
                     i += 1
 
-    std_start = timeit.default_timer()
-    #good_indices=np.mean(data[:,]*255,axis=1)>5
-    good_indices=range(0,data.shape[0],extramargin**3)
-    Xmean=data[good_indices].mean(axis=0).astype(np.float32)
-    Xstd=data[good_indices].std(axis=0).astype(np.float32)
+    good_indices=np.mean(data[:,]*255,axis=1)>5
+    min_examples=data.shape[0]/patchlen
+    if len(np.where(good_indices==True)[0])>=min_examples:
+	Xmean=data[good_indices].mean(axis=0).astype(np.float32)
+	Xstd=data[good_indices].std(axis=0).astype(np.float32)
+    else:
+	h5 = tables.openFile(trainfile)
+	Xmean = h5.root.Xmean[:].astype(np.float32)
+	Xstd = h5.root.Xstd[:].astype(np.float32)
+	h5.close()
 
     return data,Xmean,Xstd
 
@@ -284,7 +289,7 @@ def compute_ranges(list_tensors,extramargin,speedup):
 
 @deconvolver_timer.timed
 def filter_volume(list_tensors, Xmean, Xstd, extramargin, model,
-                  speedup, do_cython=False):
+                  speedup, do_cython=False,trainfile=None):
 
     if isinstance(list_tensors, (np.ndarray, np.generic)):
         list_tensors=[list_tensors]
@@ -296,7 +301,7 @@ def filter_volume(list_tensors, Xmean, Xstd, extramargin, model,
 
     data=None
     if Xstd is None or Xmean is None:
-        data,Xmean,Xstd=compute_data_mean_std(list_tensors,extramargin,speedup,do_cython,rangex,rangey,rangez,patchlen,shape_tensor)
+        data,Xmean,Xstd=compute_data_mean_std(list_tensors,extramargin,speedup,do_cython,rangex,rangey,rangez,patchlen,shape_tensor,trainfile)
 
     reconstruction=deconvolve(list_tensors,extramargin,speedup,do_cython,rangex,rangey,rangez,patchlen,shape_tensor,data, Xmean,Xstd,model)
 
