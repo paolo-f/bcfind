@@ -255,7 +255,7 @@ def _patch_ms(patch, args):
     if minint <= 1:
         tee.log('minint threshold too low (%d) - I believe there are no cells in this substack' % minint)
         return None
-    if thresholds[1] <= args.min_second_threshold:
+    if thresholds[1] < args.min_second_threshold:
         tee.log('thresholds[1] threshold too low (%d) - I believe there are no cells in this substack' % thresholds[1])
         return None
 
