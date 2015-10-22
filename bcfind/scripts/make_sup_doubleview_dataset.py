@@ -175,9 +175,9 @@ def main(args):
     y_sup = np.array([]).reshape(0, patchlen).astype(np.float32)
     X_neg = np.array([]).reshape(0, 2*patchlen).astype(np.float32)
     y_neg = np.array([]).reshape(0, patchlen).astype(np.float32)
+    X_original = np.array([]).reshape(0, 2*patchlen).astype(np.float32)
 
     data_frame_markers = pd.read_csv(args.list_trainset, dtype={'view1': str, 'view2': str, 'ss_id': str })
-
     for row in data_frame_markers.index:
         row_data=data_frame_markers.iloc[row]
 
@@ -197,20 +197,21 @@ def main(args):
 
 
         second_view_dir=args.substacks_base_path+'/'+row_data['view2']
-        R, t = parse_transformation_file(args.transforms_folder+'/'+row_data['ss_id']+'/'+row_data['view1']+'_'+row_data['view2'])
+        R, t = parse_transformation_file(args.transformations_path+'/'+row_data['ss_id']+'/'+row_data['view1']+'_'+row_data['view2'])
 	tensor_second_view = transform_substack(second_view_dir, args.tensors_base_path+'/'+row_data['view2']+'.h5', row_data['ss_id'], R, t, 0, invert=True)
 
 
         temp_X_sup, temp_y_sup, temp_X_neg, temp_y_neg = make_pos_neg_dataset(tensor_first_view, tensor_second_view, substack, C,row_data['view1'],row_data['view2'], default_sigma=args.sigma,size=args.size_patch, save_tiff_files=False ,find_negative=args.negatives)
 
 
+        X_original = np.vstack((X_original, temp_X_sup))
+        X_original = np.vstack((X_original, temp_X_neg))
         if args.local_standardization:
             print('Do local standardization')
             Xmean = np.vstack((temp_X_sup,temp_X_neg)).mean(axis=0)
             Xstd = np.vstack((temp_X_sup,temp_X_neg)).std(axis=0)
             temp_X_sup = (temp_X_sup - Xmean) / Xstd
             temp_X_neg = (temp_X_neg - Xmean) / Xstd
-
 
         X_sup = np.vstack((X_sup, temp_X_sup))
         y_sup = np.vstack((y_sup, temp_y_sup))
@@ -232,20 +233,17 @@ def main(args):
     print('Total Data set shape:', X.shape, 'size:', X.nbytes / (1024 * 1024), 'MBytes')
     print('Total target shape:', y.shape, 'size:', y.nbytes / (1024 * 1024), 'MBytes')
 
-    if not args.local_standardization:
-        print('Do global standardization')
-        Xmean = X.mean(axis=0)
-        Xstd = X.std(axis=0)
-        X = (X - Xmean) / Xstd
+    print('Compute global mean and std')
+    Xmean = X_original.mean(axis=0)
+    Xstd = X_original.std(axis=0)
 
     print('Saving training data to', args.outfile)
     h5file = tables.openFile(args.outfile, mode='w', title="Training set")
     root = h5file.root
     h5file.createArray(root, "X", X)
     h5file.createArray(root, "y", y)
-    if not args.local_standardization:
-        h5file.createArray(root, "Xmean", Xmean)
-        h5file.createArray(root, "Xstd", Xstd)
+    h5file.createArray(root, "Xmean", Xmean)
+    h5file.createArray(root, "Xstd", Xstd)
     h5file.close()
 
 
@@ -260,7 +258,7 @@ def get_parser():
                         help='Name of the folder in which hdf5 tensors of the aligned views are stored')
     parser.add_argument('mergedmarkers_folder', metavar='mergedmarkers_folder', type=str,
                         help='Name of the folder in which merged markers are stored')
-    parser.add_argument('transforms_folder', metavar='transform_folder', type=str,
+    parser.add_argument('transformations_path', metavar='transformations_path', type=str,
                         help='Name of the folder in which estimated rigid transformations are stored')
     parser.add_argument('outfile', metavar='outfile', type=str,
                         help='Name of file where the dataset will be saved')
