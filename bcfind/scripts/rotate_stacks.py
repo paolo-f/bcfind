@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-
 """
 Scripts that computs the rigid transformation between two 3D point clouds and then rotates a 3D input tensor to a reference volume
 """
-__author__ = 'paciscopi'
 
 import numpy as np
 import timeit
@@ -19,9 +17,11 @@ def main(args):
     print('R: ', R)
     print('t: ', t)
     total_stop = timeit.default_timer()
-    print "Rigid Transformation estimated in %s secs."%(str(total_stop - total_start))
+    print "Rigid Transformation estimated in %s secs."%(str(timeit.default_timer() - total_start))
     if args.transform:
-        apply_transform(args.input_view, args.target_view, args.transformed_view, R, t)
+	total_start= timeit.default_timer()
+        transform_tensor(args.input_view, args.target_view, args.transformed_view, R, t)
+	print "Rigid Transformation applied to the input tensor in %s secs."%(str(timeit.default_timer() - total_start))
 
 
 
