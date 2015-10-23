@@ -125,7 +125,7 @@ manifold.SurfaceCleaner
   :undoc-members:
   :show-inheritance:
 
-clsm_registration.coarse_registration
+clsm_registration.estimate_registration
 -------------
 
 .. automodule:: clsm_registration.coarse_registration
