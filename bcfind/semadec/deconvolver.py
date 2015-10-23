@@ -290,7 +290,40 @@ def compute_ranges(list_tensors,extramargin,speedup):
 @deconvolver_timer.timed
 def filter_volume(list_tensors, Xmean, Xstd, extramargin, model,
                   speedup, do_cython=False,trainfile=None):
+    """
+    Method that applies the semantic deconvolution to a list of tensors of the same shape in the 
+    multiview scenario or to a single tensor in a single view scenario. Firstly, the function 
+    preprocess the tensors obtaining a standardized data array of shape (num_examples,patchlen*len(list_tensors)),
+    then deconvolves it with a trained neural network and finally reconstructs the deconvolved output tensor
 
+    Parameters
+    ----------
+    
+    list_tensors : [list| numpy tensor]
+        list of tensors of the same shape (nz,ny,nx) in the multiview scenario or 
+        a single numpy tensor in the single view scenario
+    Xmean : str
+	Mean vector of length patchlen*len(list_tensors) used for normalizing data
+    Xstd : str
+	Standard Deviation vector of length patchlen*len(list_tensors) used for normalizing data
+    extramargin : int
+        Extra margin for convolution. Should be equal to (filter_size - 1)/2	
+    model : str 
+	pickle file containing a trained network
+    speedup : boolean 
+	convolution stride (isotropic along X,Y,Z)
+    do_cython : boolean 
+	use the compiled cython module to speedup preprocessing and postprocessing (Default: False)
+    trainfile : boolean 
+	HDF5 file on which the network was trained (should contain mean/std arrays) (Default: None)
+
+    Returns
+    -------
+
+    renconstruction: numpy tensor
+	deconvolved tensor of the same shape of the input tensors
+
+    """
     if isinstance(list_tensors, (np.ndarray, np.generic)):
         list_tensors=[list_tensors]
 
