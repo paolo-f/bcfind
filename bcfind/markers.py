@@ -4,7 +4,7 @@ from scipy.spatial.distance import cdist
 import numpy as np
 
 from bcfind.volume import Center
-from clsm_registration.coarse_registration import horn_method
+from clsm_registration.estimate_registration import horn_method
 
 def distance((x1,y1,z1),(x2,y2,z2)):
     return math.sqrt((x1-x2)**2 + (y1-y2)**2 + (z1-z2)**2)
