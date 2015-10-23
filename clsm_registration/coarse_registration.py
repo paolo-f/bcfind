@@ -1,17 +1,12 @@
 # -*- coding: utf-8 -*-
-__author__ = 'paciscopi'
-
 import numpy as np
 import os
 from PIL import Image
 import glob
-from pyparsing import Word, nums, restOfLine, Suppress, Group, Combine, Optional
-import timeit
 import argparse
 import tables
 import math
 from scipy import special
-from progressbar import *
 
 
 #Arun algorithm
@@ -261,109 +256,3 @@ def horn_method(X, T, weights, verbose=False):
     error_vector=np.array(error_vector)
 
     return R, t, error_vector, transfX, np.transpose(diff)
-
-
-def apply_transform(input_view, target_view, transformed_view, R, t, suffix='.tif', convert_to_gray=True):
-    """
-    Method that applies a previously estimated rigid transformation to an input view
-    
-    Parameters
-    ----------
-
-    input_view : str
-	directory of hdf5 file of the input view
-    target_view : str
-	directory of hdf5 file of the target view
-    transformed_view : str
-	directory of hdf5 file of the transformed input view
-    R : numpy array of shape (dim_points, 3)
-	rotational component of the estimated rigid transformation
-    t : numpy array of shape (3)
-	translational component of the estimated rigid transformation
-    suffix : str
-	suffix of the slice images (Default: '.tif')
-    convert_to_gray: boolean
-	if True the slices are read and saved in greyscale (Default: True)
-
-    """
-    t_start = timeit.default_timer()
-
-    if (os.path.isdir(target_view)):
-        filesTarget = sorted([target_view + '/' + f for f in os.listdir(target_view) if f[0] != '.' and f.endswith(suffix)])
-        img_z = np.asarray(Image.open(filesTarget[0]))
-        height_target, width_target = img_z.shape
-        depth_target = len(filesTarget)
-    elif (tables.isHDF5File(target_view)):
-        hf5_target_view = tables.openFile(target_view, 'r')
-        depth_target, height_target, width_target = hf5_target_view.root.full_image.shape
-        hf5_target_view.close()
-    else:
-        raise Exception('%s is neither a hdf5 file nor a valid directory'%input_view)
-
-    if (os.path.isdir(input_view)):
-        filesInput = sorted([input_view + '/' + f for f in os.listdir(input_view) if f[0] != '.' and f.endswith(suffix)])
-        img_z = np.asarray(Image.open(filesInput[0]))
-        height_input, width_input = img_z.shape
-        depth_input = len(filesInput)
-        pixels_input = np.empty(shape=(depth_input, height_input, width_input), dtype=np.uint8)
-        for z, image_file in enumerate(filesInput):
-            img_z = Image.open(image_file)
-            if convert_to_gray:
-                img_z = img_z.convert('L')
-            pixels_input[z, :, :] = np.asarray(img_z)
-    elif (tables.isHDF5File(input_view)):
-        hf5_input_view = tables.openFile(input_view, 'r')
-        depth_input, height_input, width_input = hf5_input_view.root.full_image.shape
-        pixels_input = hf5_input_view.root.full_image[0:depth_input,0:height_input,0:width_input]
-        hf5_input_view.close()
-    else:
-        raise Exception('%s is neither a hdf5 file nor a valid directory'%input_view)
-
-
-    t_stop = timeit.default_timer()
-    print('Read input stack completed in %s secs.' %(t_stop - t_start) )
-
-    pixels_transformed_input = np.empty((depth_target, height_target, width_target), dtype=np.uint8)
-
-    h5_output=False
-    if (transformed_view.endswith('.h5')):
-        target_shape = (depth_target, height_target, width_target)
-        atom = tables.UInt8Atom()
-        h5f = tables.openFile(transformed_view, 'w')
-        ca = h5f.createCArray(h5f.root, 'full_image', atom, target_shape)
-        h5_output=True
-    else:
-        if not os.path.exists(transformed_view):
-            os.makedirs(transformed_view)
-        else:
-            files = glob.glob(transformed_view + '/*')
-            for f in files:
-                os.remove(f)
-
-    total_start = timeit.default_timer()
-
-    coords_2d_target = np.vstack(np.indices((width_target,height_target)).swapaxes(0,2).swapaxes(0,1))
-    invR = np.linalg.inv(R)
-    invR_2d_transpose = np.transpose(np.dot(invR[:, 0:2], np.transpose(coords_2d_target - t[0:2])))
-    pbar = ProgressBar(maxval=depth_target,widgets=['Rotating %d slices: ' % (depth_target),
-                                Percentage(), ' ', ETA()])
-    rangez=range(0,depth_target,1)
-    for z in pbar(rangez):
-        R_t_3d = np.transpose(invR_2d_transpose + invR[:, 2] * (z - t[2]))
-        good_indices = np.arange(R_t_3d.shape[1])
-        good_indices = good_indices[(R_t_3d[0, :] > 0) * (R_t_3d[1, :] > 0) * (R_t_3d[2, :] > 0) * (R_t_3d[0, :] < (width_input - 1)) * (R_t_3d[1, :] < (height_input - 1)) * (R_t_3d[2, :] < (depth_input - 1))]
-        R_t_3d = R_t_3d.take(good_indices,axis=1)
-        R_t_3d = np.round(R_t_3d).astype(int)
-        coords_2d_target_tmp = coords_2d_target.take(good_indices, axis=0)
-        coords_3d_target_tmp = np.hstack((coords_2d_target_tmp, np.ones((coords_2d_target_tmp.shape[0], 1)).astype(int) * z))
-        pixels_transformed_input[coords_3d_target_tmp[:, 2], coords_3d_target_tmp[:, 1], coords_3d_target_tmp[:, 0]] = pixels_input[R_t_3d[2, :], R_t_3d[1, :], R_t_3d[0, :]]
-        if h5_output:
-            ca[z, :, :] = pixels_transformed_input[z,:,:]
-        else:
-            im = Image.fromarray(np.uint8(pixels_transformed_input[z]))
-            im.save(transformed_view + '/slice_' + str(z).zfill(4) + ".tif", 'TIFF')
-
-    if h5_output:
-        h5f.close()
-    total_stop = timeit.default_timer()
-    print "total time transformation: " + str(total_stop - total_start)
