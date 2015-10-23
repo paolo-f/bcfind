@@ -54,31 +54,31 @@ def parse_transformation_file(transformation_file):
 
 def transform_substack(indir, tensorimage, substack_id, R, t, extramargin, outdir=None, invert=False, save_tiff=False, save_hdf5=False):
     """
-    Method that estimates the rigid transformation between two marker files.
+    Method that applies a previously estimated rigid transformation to a specific substack.
 
     Parameters
     ----------
     
     indir : str
-	path of the substacks folder of the input view
+	substack dir of the input view
     tensorimage : str
-	hdf5 file of the input tensor
+	the whole tensor in hdf5 format
     substack_id : str
-	id of the substacks that will be transformed
+	id of the substack that will be transformed
     R : numpy array of shape (3, 3)
 	rotational component of the estimated rigid transformation
     t : numpy array of shape (3)
 	translational component of the estimated rigid transformation
     extramargin : int
-	extramargin used to obtain the transformed tensor
+	extramargin used to extract the transformed substack from tensorimage
     outdir : str 
 	output directory where the transformed substack will be saved (Default: None)
     invert : boolean 
 	if True the tranformation is inverted (Default: False)
     save_tiff : boolean 
-	save the transformed substack in stack of tif slices (Default: False)
+	save the transformed substack in a stack of tiff slices (Default: False)
     save_hdf5 : boolean 
-	save the transformed substack in hdf5 format (Default: False)
+	save the transformed substack as a hdf5 tensor (Default: False)
 
     Returns
     -------
@@ -177,7 +177,7 @@ def transform_substack(indir, tensorimage, substack_id, R, t, extramargin, outdi
 
 def transform_tensor(input_view, target_view, transformed_view, R, t, suffix='.tif', convert_to_gray=True):
     """
-    Method that applies a previously estimated rigid transformation to an input view
+    Method that applies a previously estimated rigid transformation to an input tensor
     
     Parameters
     ----------
