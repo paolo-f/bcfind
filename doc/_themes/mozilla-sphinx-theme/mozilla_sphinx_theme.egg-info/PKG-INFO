@@ -1,0 +1,43 @@
+Metadata-Version: 1.1
+Name: mozilla-sphinx-theme
+Version: 0.2
+Summary: A theme using the default mozilla design guidelines
+Home-page: https://github.com/ametaireau/mozilla-sphinx-theme/
+Author: Alexis Metaireau
+Author-email: alexis@notmyidea.org
+License: BSD
+Description: Mozilla sphinx's theme
+        ######################
+        
+        This is a version of Mozilla's sandstone theme, for `the Sphinx documentation
+        engine. <http://sphinx.pocoo.org>`_.
+        
+        Okay, how do I install it?
+        ==========================
+        
+        You need to install it locally and configure Sphinx to use it. In your `conf.py` file::
+        
+            import mozilla_sphinx_theme                                       
+            import os                                                         
+                                                                              
+            html_theme_path = [os.path.dirname(mozilla_sphinx_theme.__file__)]
+                                                                              
+            html_theme = 'mozilla'                                            
+        
+        Also, take care and remove the `pygments_style` configuration, as it may not be
+        of the better taste with the mozilla's theme.
+        
+        Enjoy!
+        
+Keywords: sphinx extension theme
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Documentation
+Classifier: Topic :: Software Development :: Documentation

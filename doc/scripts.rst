@@ -118,3 +118,90 @@ delete_fp.py
     :module: bcfind.scripts.delete_fp
     :func: get_parser
     :prog: delete_fp.py
+    
+CLSM registration
+-----------------
+
+compute_thresholds.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.compute_thresholds
+    :func: get_parser
+    :prog: compute_thresholds.py
+
+content_based_fusion.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.content_based_fusion
+    :func: get_parser
+    :prog: content_based_fusion.py
+
+fuse_markers.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.fuse_markers
+    :func: get_parser
+    :prog: fuse_markers.py
+
+fuse_tensors.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.fuse_tensors
+    :func: get_parser
+    :prog: fuse_tensors.py
+
+
+fuse_transformed_tensors.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.fuse_transformed_tensors
+    :func: get_parser
+    :prog: fuse_transformed_tensors.py
+
+make_sup_doubleview_dataset.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.make_sup_doubleview_dataset
+    :func: get_parser
+    :prog: make_sup_doubleview_dataset.py
+
+merge_markers_substack.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.merge_markers_substack
+    :func: get_parser
+    :prog: merge_markers_substack.py
+
+rotate_stacks.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.rotate_stacks
+    :func: get_parser
+    :prog: rotate_stacks.py
+
+run_doubleview_semantic_deconvolution.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.run_doubleview_semantic_deconvolution
+    :func: get_parser
+    :prog: run_doubleview_semantic_deconvolution.py
+
+transform_views.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.transform_views
+    :func: get_parser
+    :prog: transform_views.py
+
+
+

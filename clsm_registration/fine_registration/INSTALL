@@ -1,0 +1,4 @@
+To install the MultiResMIRegistration:
+1) install cmake
+2) move to the MultiResMIRegistration folder and launch the command: "cmake ."
+3) compile the code with the command: "make" 

@@ -16,10 +16,10 @@ import ImageDraw
 import cPickle as pickle
 from scipy.spatial import cKDTree
 
-from . import timer
-from .log import tee
-from .utils import mkdir_p, which
-from . import log
+from bcfind import timer
+from bcfind.log import tee
+from bcfind.utils import mkdir_p, which
+from bcfind import log
 
 
 SHARE_DIR = os.path.dirname(log.__file__)+'/share'
@@ -379,7 +379,7 @@ class SubStack(object):
             self.pixels.append(img_z.load())
         tee.log(z+1, 'images read into stack (from h5 file)')
 
-    def load_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None):
+    def load_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None, pair_id=None):
         """Loads a sequence of images into a stack
 
         Parameters
@@ -398,11 +398,12 @@ class SubStack(object):
             return
         self.imgs = []
         self.pixels = []
-        if ignore_info_files:
+	if pair_id is not None:
+            idir = self.indir+'/'+self.substack_id+'/'+pair_id
+            files = sorted([idir+'/'+f for f in os.listdir(idir) if f[0] != '.' and valid_suffix(f)])
+        elif ignore_info_files:
             idir = self.indir+'/'+self.substack_id
             files = sorted([idir+'/'+f for f in os.listdir(idir) if f[0] != '.' and valid_suffix(f)])
-            # print('******* These are the files in',idir)
-            # print(files)
         else:
             files = [self.indir+'/'+fname for fname in self.info['Files']]
         if len(files) == 0:
@@ -420,6 +421,17 @@ class SubStack(object):
             else:
                 tee.log('.', end='')
         tee.log(z, 'images read into stack')
+
+    def get_volume(self, convert_to_gray=True, flip=False, ignore_info_files=False, h5filename=None):
+	if not hasattr(self, 'imgs'):
+	    self.load_volume(convert_to_gray, flip, ignore_info_files, h5filename)
+	Depth = self.info['Depth']
+	Width = self.info['Width']
+	Height = self.info['Height']
+	patch = np.zeros((Width,Height,Depth))
+	for z in range(Depth):
+	    patch[:, :, z] = np.array(self.imgs[z]).T
+	return patch
 
     def neighbors_graph(self, C):
         X = np.array([[c.x, c.y, c.z] for c in C])

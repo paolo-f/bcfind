@@ -18,8 +18,15 @@ from bcfind import volume
 def main(args):
     st = datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     tee.log('find_cells.py running on',platform.node(),st)
+
     mkdir_p(args.outdir+'/'+args.substack_id)
-    tee.logto('%s/%s/log.txt' % (args.outdir, args.substack_id))
+    if args.pair_id is None:
+        tee.logto('%s/%s/log.txt' % (args.outdir, args.substack_id))
+	args.outdir=args.outdir+'/'+args.substack_id
+    else:
+        tee.logto('%s/%s/log_%s.txt' % (args.outdir, args.substack_id, args.pair_id))
+	args.outdir=args.outdir+'/'+args.substack_id+'/'+args.pair_id
+        mkdir_p(args.outdir)
 
     timers = [mscd.pca_analysis_timer, mscd.mean_shift_timer, mscd.ms_timer, mscd.patch_ms_timer]
     timers.extend([volume.save_vaa3d_timer, volume.save_markers_timer])
@@ -27,9 +34,9 @@ def main(args):
     for t in timers:
         t.reset()
 
-    substack = volume.SubStack(args.indir, args.substack_id)
 
-    substack.load_volume()
+    substack = volume.SubStack(args.indir, args.substack_id)
+    substack.load_volume(pair_id=args.pair_id)
     if args.local:
         mscd.pms(substack, args)
     else:
@@ -58,6 +65,9 @@ def get_parser():
     parser.add_argument('-r', '--hi_local_max_radius', metavar='r', dest='hi_local_max_radius',
                         action='store', type=float, default=6,
                         help='Radius of the seed selection ball (r)')
+    parser.add_argument('-t', '--seeds_filtering_mode', dest='seeds_filtering_mode',
+                        action='store', type=str, default='soft',
+                        help="Type of seed selection ball ('hard' or 'soft')")
     parser.add_argument('-R', '--mean_shift_bandwidth', metavar='R', dest='mean_shift_bandwidth',
                         action='store', type=float, default=5.5,
                         help='Radius of the mean shift kernel (R)')
@@ -72,6 +82,9 @@ def get_parser():
     parser.add_argument('-M', '--max_expected_cells', metavar='max_expected_cells', dest='max_expected_cells',
                         action='store', type=int, default=10000,
                         help="""Max number of cells that may appear in a substack""")
+    parser.add_argument('-p', '--pair_id', dest='pair_id',
+                        action='store', type=str,
+                        help="id of the pair of views, e.g 000_090. A folder with this name will be created inside outdir/substack_id")
     parser.set_defaults(save_image=False)
     return parser
 

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-
 """
 Scripts that fuse 3D greyscale tensors in a 3D RGB tensor
 """
-__author__ = 'paciscopi'
 
 import numpy as np
 import os
@@ -12,8 +10,10 @@ import glob
 import cv2
 import argparse
 
+from clsm_registration.rigid_transformation import fuse_tensors
 
-def main(args):
+
+def read_tensors(args):
 
     suffix = ".tif"
     convert_to_gray = True
@@ -62,27 +62,12 @@ def main(args):
             pixels_blueChannel[z, :, :] = np.asarray(img_z)
         print('...read the third tensor (%s slices)' %z)
 
+    return pixels_redChannel,pixels_greenChannel,pixels_blueChannel
 
-    if not os.path.exists(args.outputdir):
-        os.makedirs(args.outputdir)
-    else:
-        files = glob.glob(args.outputdir + '/*')
-        for f in files:
-            os.remove(f)
 
-    import uuid
-    for z in xrange(0, depth_redChannel, 1):
-        pixels_merged = cv2.merge((pixels_redChannel[z], pixels_greenChannel[z], pixels_blueChannel[z]))
-        im = Image.fromarray(pixels_merged)
-        #im.save(args.outputdir + '/slice_' + str(z).zfill(4) + ".tif", 'TIFF')
-        tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
-        im.save(tempname)
-        destname = args.outputdir+'/slice_'+str(z).zfill(4)+'.tif'
-        os.system('tiffcp -clzw:2 ' + tempname + ' ' + destname)
-        os.remove(tempname)
-    print('...fusion computed (%s slices) ' %z)
-    print('fused stack saved in ', args.outputdir)
-
+def main(args):
+    pixels_redChannel, pixels_greenChannel,pixels_blueChannel=read_tensors(args)
+    fuse_tensors(args.outputdir,pixels_redChannel,pixels_greenChannel,pixels_blueChannel)
 
 def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,

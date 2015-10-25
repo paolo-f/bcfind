@@ -11,7 +11,8 @@ import argparse
 import pylab
 
 from bcfind.volume import *
-from bcfind.markers import distance, match_markers
+from bcfind.markers import distance, match_markers, match_markers_with_icp
+from scipy.spatial.distance import cdist 
 
 
 def inside(c,substack):
@@ -19,6 +20,97 @@ def inside(c,substack):
     if c.x<m or c.y<m or c.z<m or c.x>substack.info['Width']-m or c.y>substack.info['Height']-m or c.z>substack.info['Depth']-m:
         return False
     return True
+
+
+def eval_perf_icp(substack,C_true,C_pred,verbose=True,errors_marker_file=None, max_cell_diameter=None):
+
+    _,good_true,good_pred,_,_ = match_markers_with_icp(C_true,C_pred, max_distance = max_cell_diameter/2.,num_iterations = 0, eps=1e-8, verbose=False) 
+
+    c_pred_matched=[C_pred[i] for i in good_pred]
+    c_true_matched=[C_true[i] for i in good_true]
+    true_positives_pred = set(c_pred_matched) 
+    true_positives_true = set(c_true_matched)
+
+    TP_inside = []
+    for c1,c2 in zip(c_pred_matched,c_true_matched):
+        if inside(c2,substack):
+            TP_inside.append(c1)
+
+    FP_inside,FN_inside = [],[]
+    if errors_marker_file is not None:
+        ostream = open(errors_marker_file,'w')
+        print('##x,y,z,radius,shape,name,comment, color_r,color_g,color_b',file=ostream)
+
+    for i,c in enumerate(C_true):
+        if c not in true_positives_true:
+            if inside(c,substack):
+                r,g,b = 255,0,255
+                name = 'FN_%03d (%s)' % (i+1,c.name)
+                cx,cy,cz = int(round(c.x)),int(round(c.y)),int(round(c.z))
+                comment = ':'.join(map(str,[cx,cy,cz,c]))
+                if errors_marker_file is not None:
+                    print(','.join(map(str,[cx,cy,cz,0,1,name,comment,r,g,b])), file=ostream)
+                FN_inside.append(c)
+                if verbose:
+                    print('FN: ', c.name,c.x,c.y,c.z,c)
+    for i,c in enumerate(C_pred):
+        c.is_false_positive = False
+        if c not in true_positives_pred:
+            if inside(c,substack):
+                r,g,b = 255,0,0
+                name = 'FP_%03d (%s)' % (i+1,c.name)
+                c.is_false_positive = True
+                cx,cy,cz = int(round(c.x)),int(round(c.y)),int(round(c.z))
+                comment = ':'.join(map(str,[cx,cy,cz,c]))
+                if errors_marker_file is not None:
+                    print(','.join(map(str,[1+cx,1+cy,1+cz,0,1,name,comment,r,g,b])), file=ostream)
+                FP_inside.append(c)
+                if verbose:
+                    print('FP: ', c.name,c.x,c.y,c.z,c)
+    # Also print predicted TP in error marker file (helps debugging)
+    for i,c in enumerate(C_pred):
+        if c in true_positives_pred:
+            if inside(c,substack):
+                r,g,b = 0,255,0
+                name = 'TP_%03d (%s)' % (i+1,c.name)
+                cx,cy,cz = int(round(c.x)),int(round(c.y)),int(round(c.z))
+                comment = ':'.join(map(str,[cx,cy,cz,c]))
+                if errors_marker_file is not None:
+                    print(','.join(map(str,[1+cx,1+cy,1+cz,0,1,name,comment,r,g,b])), file=ostream)
+
+    # Also print true TP in error marker file (helps debugging)
+    for i,c in enumerate(C_true):
+        if c in true_positives_true:
+            if inside(c,substack):
+                r,g,b = 0,255,255
+                name = 'TP_%03d (%s)' % (i+1,c.name)
+                cx,cy,cz = int(round(c.x)),int(round(c.y)),int(round(c.z))
+                comment = ':'.join(map(str,[cx,cy,cz,c]))
+                if errors_marker_file is not None:
+                    print(','.join(map(str,[1+cx,1+cy,1+cz,0,1,name,comment,r,g,b])), file=ostream)
+
+
+    if errors_marker_file is not None:
+        ostream.close()
+
+    if len(TP_inside) > 0:
+        precision = float(len(TP_inside))/float(len(TP_inside)+len(FP_inside))
+        recall = float(len(TP_inside))/float(len(TP_inside)+len(FN_inside))
+    else:
+        precision = int(len(FP_inside) == 0)
+        recall = int(len(FN_inside) == 0)
+
+    if len(TP_inside)==0 and len(FP_inside)>0 and len(FN_inside)>0:
+        F1 = 0.00
+    else:
+        F1 = 2*precision*recall/(precision+recall)
+
+    C_pred_inside = [c for c in C_pred if inside(c,substack)]
+    C_true_inside = [c for c in C_true if inside(c,substack)]
+    print('|pred|=%d |true|=%d  P: %.2f / R: %.2f / F1: %.2f ==== TP: %d / FP: %d / FN: %d' % (len(C_pred_inside),len(C_true_inside),precision*100,recall*100,F1*100,len(TP_inside),len(FP_inside),len(FN_inside)))
+    
+    return precision,recall,F1,TP_inside,FP_inside,FN_inside
+ 
 
 
 def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_file=None, max_cell_diameter=None):
@@ -120,28 +212,33 @@ def eval_perf(substack,C_true,C_pred,verbose=True,errors_marker_file=None,rp_fil
     if errors_marker_file is not None:
         ostream.close()
 
-    # This is for the recall-precision and ROC curves according to manifold distance
-    if hasattr(C_pred[0],'distance') and rp_file is not None:
-        with open(rp_file, 'w') as ostream:
-            for i,c in enumerate(C_pred):
-                if inside(c,substack):
-                    if c in true_positives_pred:
-                        print(-c.distance, '1', file=ostream)
-                    else:
-                        print(-c.distance, '0', file=ostream)
-            # Add also the false negatives with infinite distance so they will always be rejected
-            for i,c in enumerate(C_true):
-                if c not in true_positives_true:
+
+    if len(C_pred):
+        if hasattr(C_pred[0],'distance') and rp_file is not None:
+            with open(rp_file, 'w') as ostream:
+                for i,c in enumerate(C_pred):
                     if inside(c,substack):
-                        print(-1000, '1', file=ostream)
+                        if c in true_positives_pred:
+                            print(-c.distance, '1', file=ostream)
+                        else:
+                            print(-c.distance, '0', file=ostream)
+                # Add also the false negatives with infinite distance so they will always be rejected
+                for i,c in enumerate(C_true):
+                    if c not in true_positives_true:
+                        if inside(c,substack):
+                            print(-1000, '1', file=ostream)
 
     if len(TP_inside) > 0:
         precision = float(len(TP_inside))/float(len(TP_inside)+len(FP_inside))
         recall = float(len(TP_inside))/float(len(TP_inside)+len(FN_inside))
     else:
         precision = int(len(FP_inside) == 0)
-        recall = 1.0
-    F1 = 2*precision*recall/(precision+recall)
+        recall = int(len(FN_inside) == 0)
+
+    if len(TP_inside)==0 and len(FP_inside)>0 and len(FN_inside)>0:
+        F1 = 0.00
+    else:
+        F1 = 2*precision*recall/(precision+recall)
 
     C_pred_inside = [c for c in C_pred if inside(c,substack)]
     C_true_inside = [c for c in C_true if inside(c,substack)]
@@ -307,6 +404,7 @@ def get_parser():
     parser.add_argument('-g', '--ground_truth_folder', dest='ground_truth_folder', type=str, default=None,
                         help='folder containing merged marker files (for multiview images)')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Verbose output.')
+    parser.add_argument('--do_icp', dest='do_icp', action='store_true', help='Use the ICP matching procedure to evaluate the performance')
     return parser
 
 
@@ -343,12 +441,14 @@ def main(args):
             c.rejected = False
     errors_marker_file = args.outdir+'/'+args.substack_id+'/errors.marker'
     rp_file = args.outdir+'/'+args.substack_id+'/curve.rp'
-    precision,recall,F1,TP_inside,FP_inside,FN_inside = eval_perf(substack,C_true,C_pred,
-                                                                  errors_marker_file=errors_marker_file,
-                                                                  rp_file=rp_file,
-                                                                  verbose=args.verbose,
-                                                                  max_cell_diameter=args.max_cell_diameter)
-
+    if args.do_icp:
+        precision,recall,F1,TP_inside,FP_inside,FN_inside = eval_perf_icp(substack,C_true,C_pred,verbose=args.verbose,errors_marker_file=errors_marker_file, max_cell_diameter=args.max_cell_diameter)
+    else:
+        precision,recall,F1,TP_inside,FP_inside,FN_inside = eval_perf(substack,C_true,C_pred,
+                                                                      errors_marker_file=errors_marker_file,
+                                                                      rp_file=rp_file,
+                                                                      verbose=args.verbose,
+                                                                      max_cell_diameter=args.max_cell_diameter)
     with open(args.outdir+'/'+args.substack_id+'/eval.log','w') as ostream:
         print('substack,method,parameter,precision,recall,F1,TP,FP,FN,|true|,|pred|',file=ostream)
         print(','.join(map(str,([args.substack_id,'unfiltered',0,precision,recall,F1,

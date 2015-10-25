@@ -2,11 +2,16 @@
 """
 Script that creates a training set for semantic deconvolution.
 """
+
 from __future__ import print_function
 import argparse
 import cPickle as pickle
 import tables
 import numpy as np
+import timeit
+import re
+import sys
+
 
 from bcfind.volume import SubStack
 from bcfind.semadec import imtensor
@@ -14,23 +19,32 @@ from bcfind.semadec import deconvolver
 
 
 def main(args):
+
+    total_start = timeit.default_timer()
+    print('Starting reconstruction of volume %s ...'%(args.substack_id))
+
     substack = SubStack(args.indir,args.substack_id)
     np_tensor_3d, minz = imtensor.load_nearby(args.tensorimage, substack, args.extramargin)
 
-    # Standardize volume according to mean and std found in the training set
-    print('Reading standardization data from', args.trainfile)
-    h5 = tables.openFile(args.trainfile)
-    Xmean = h5.root.Xmean[:].astype(np.float32)
-    Xstd = h5.root.Xstd[:].astype(np.float32)
-    h5.close()
+    if not args.local_mean_std:
+        print('Reading standardization data from', args.trainfile)
+        h5 = tables.openFile(args.trainfile)
+        Xmean = h5.root.Xmean[:].astype(np.float32)
+        Xstd = h5.root.Xstd[:].astype(np.float32)
+        h5.close()
+    else:
+        Xmean=None
+        Xstd=None
+    
     print('Starting semantic devonvolution of volume', args.substack_id)
     model = pickle.load(open(args.model))
-    minz = int(substack.info['Files'][0].split('full_')[1].split('.tif')[0])
-
+    minz = int(re.split('[a-zA-z0-9]*_',substack.info['Files'][0])[1].split('.tif')[0])
     reconstruction = deconvolver.filter_volume(np_tensor_3d, Xmean, Xstd,
-                                               args.extramargin, model, args.speedup, args.do_cython, args.do_multiprocessing)
+                                               args.extramargin, model, args.speedup, do_cython=args.do_cython, trainfile=args.trainfile)
 
     imtensor.save_tensor_as_tif(reconstruction, args.outdir+'/'+args.substack_id, minz)
+
+    print ("total time reconstruction: %s" %(str(timeit.default_timer() - total_start)))
 
 
 def get_parser():
@@ -56,10 +70,11 @@ def get_parser():
     parser.add_argument('--speedup', metavar='speedup', dest='speedup',
                         action='store', type=int, default=4,
                         help='convolution stride (isotropic along X,Y,Z)')
+    parser.add_argument('--local_mean_std', dest='local_mean_std', action='store_true',
+                        help='computcompute mean and std locally from the substack')
     parser.add_argument('--do_cython', dest='do_cython', action='store_true', help='use the compiled cython modules in deconvolver.py')
-    parser.add_argument('--do_multiprocessing', dest='do_multiprocessing', action='store_true', help='use the multiprocessing module to create a pool of workers')
-    parser.set_defaults(do_cython=False,do_multiprocessing=False)
     return parser
+
 
 if __name__ == '__main__':
     parser = get_parser()
