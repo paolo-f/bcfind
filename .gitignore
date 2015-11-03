@@ -17,5 +17,3 @@ doc/_build
 */*.so
 */*.c
 build
-bcfind/scripts/total_eval_perf.py
-bcfind/scripts/make_sup_oneview_dataset.py
