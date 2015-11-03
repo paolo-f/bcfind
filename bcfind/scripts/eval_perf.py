@@ -405,6 +405,9 @@ def get_parser():
                         help='folder containing merged marker files (for multiview images)')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='Verbose output.')
     parser.add_argument('--do_icp', dest='do_icp', action='store_true', help='Use the ICP matching procedure to evaluate the performance')
+    parser.add_argument('-p', '--pair_id', dest='pair_id',
+                        action='store', type=str,
+                        help="id of the pair of views, e.g 000_090.")
     return parser
 
 
@@ -412,7 +415,10 @@ def main(args):
     substack = SubStack(args.indir,args.substack_id)
 
     if args.ground_truth_folder:
-        gt_markers = args.ground_truth_folder+'/'+args.substack_id+'-GT.marker'
+        if args.pair_id is None:
+            gt_markers = args.ground_truth_folder+'/'+args.substack_id+'-GT.marker'
+        else:
+            gt_markers = args.ground_truth_folder+'/'+args.pair_id+'/'+args.substack_id+'-GT.marker'
     else:
         gt_markers = args.indir+'/'+args.substack_id+'-GT.marker'
 
@@ -422,7 +428,14 @@ def main(args):
     except IOError:
         print('Ground truth file',gt_markers,'not found. Bailing out')
         sys.exit(1)
-    pred_markers = args.outdir+'/'+args.substack_id+'/ms.marker'
+
+    if args.pair_id is None:
+        errors_marker_file = args.outdir+'/'+args.substack_id+'/errors.marker'
+        pred_markers = args.outdir+'/'+args.substack_id+'/ms.marker'
+    else:
+        errors_marker_file = args.outdir+'/'+args.substack_id+'/'+args.pair_id+'/errors.marker'
+        pred_markers = args.outdir+'/'+args.substack_id+'/'+args.pair_id+'/ms.marker'
+
     print('Loading predicted markers from',pred_markers)
     try:
         C_pred = substack.load_markers(pred_markers,from_vaa3d=False)
@@ -439,7 +452,8 @@ def main(args):
     else:
         for c in C_pred:
             c.rejected = False
-    errors_marker_file = args.outdir+'/'+args.substack_id+'/errors.marker'
+
+
     rp_file = args.outdir+'/'+args.substack_id+'/curve.rp'
     if args.do_icp:
         precision,recall,F1,TP_inside,FP_inside,FN_inside = eval_perf_icp(substack,C_true,C_pred,verbose=args.verbose,errors_marker_file=errors_marker_file, max_cell_diameter=args.max_cell_diameter)
@@ -449,7 +463,13 @@ def main(args):
                                                                       rp_file=rp_file,
                                                                       verbose=args.verbose,
                                                                       max_cell_diameter=args.max_cell_diameter)
-    with open(args.outdir+'/'+args.substack_id+'/eval.log','w') as ostream:
+    if args.pair_id is None:
+        output_log = args.outdir+'/'+args.substack_id+'/eval.log'
+    else:
+        output_log = args.outdir+'/'+args.substack_id+'/'+args.pair_id+'/eval.log'
+    
+
+    with open(output_log,'w') as ostream:
         print('substack,method,parameter,precision,recall,F1,TP,FP,FN,|true|,|pred|',file=ostream)
         print(','.join(map(str,([args.substack_id,'unfiltered',0,precision,recall,F1,
                                  repr(len(TP_inside)),repr(len(FP_inside)),
