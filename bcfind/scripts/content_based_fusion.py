@@ -21,7 +21,7 @@ import argparse
 from progressbar import *
 import timeit
 import os.path
-import shutil
+from clsm_registration.rigid_transformation import * 
 
 def do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view, size_patch, extramargin, speedup=2, n_bins=256, fast_computation=True):
 
@@ -38,7 +38,6 @@ def do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view, si
         rangez = range(extramargin, sc[0]-extramargin, speedup)
         rangey = range(extramargin, sc[1]-extramargin, speedup)
         rangex = range(extramargin, sc[2]-extramargin, speedup)
-
         print('Patch size: %dx%dx%d (%d)' % (1+2*size_patch, 1+2*size_patch, 1+2*size_patch, (1+2*size_patch)**3))
         print('Will subsample jumping by',speedup,'voxels')
         bar_extraction = ProgressBar(widgets=['Pre-processing %d slices (%d patches): ' % (len(rangez),len(rangex)*len(rangey)*len(rangez)),
@@ -59,7 +58,6 @@ def do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view, si
                                                                 y0-size_patch:y0+size_patch+1,
                                                                 x0-size_patch:x0+size_patch+1]
 
-
                     data[iter_z * n_points + i][0:patchlen] = patch_first_view.ravel()
                     data[iter_z * n_points + i][patchlen:2*patchlen] = patch_second_view.ravel()
                     hist_first_view,_ = np.histogram(data[iter_z * n_points + i][0:patchlen], bins=n_bins, range=(0,256), density=True)
@@ -78,7 +76,6 @@ def do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view, si
 
     fused_image=np.multiply(power_entropy_first_view,np_tensor_3d_first_view) + np.multiply(power_entropy_second_view,np_tensor_3d_second_view)
     fused_image=np.round(np.divide(fused_image, power_entropy_first_view + power_entropy_second_view)).astype(np.uint8)
-    fused_image=fused_image[extramargin:sc[0]-extramargin,extramargin:sc[1]-extramargin,extramargin:sc[2]-extramargin]
 
     return fused_image,entropy_mask_first_view,entropy_mask_second_view
 
@@ -88,32 +85,38 @@ def do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view, si
 def main(args):
 
     total_start = timeit.default_timer()
-    print('Starting fusion of volume', args.substack_id)
+    print('Starting Preibisch fusion', args.substack_id)
 
-    # Create the output directory if it doesn't exist
-    if not os.path.exists(args.outdir):
-        mkdir_p(args.outdir)
+    ss = SubStack(args.first_view_dir, args.substack_id)
+    minz = int(ss.info['Files'][0].split("/")[-1].split('_')[-1].split('.tif')[0])
+    prefix = '_'.join(ss.info['Files'][0].split("/")[-1].split('_')[0:-1])+'_'
+    np_tensor_3d_first_view,_  = imtensor.load_nearby(args.tensorimage_first_view, ss, args.size_patch)
+    sc_in=np_tensor_3d_first_view.shape
 
-    # Copy the json file if it doesn't exist
-    if not os.path.isfile(args.outdir+'/info.json'):
-        shutil.copy2(args.first_view_dir+'/info.json', args.outdir)
+    if args.transformation_file is not None:
+	R, t = parse_transformation_file(args.transformation_file)
+        np_tensor_3d_second_view = transform_substack(args.second_view_dir, args.tensorimage_second_view, args.substack_id, R, t, args.size_patch, invert=True)
+    else:
+        np_tensor_3d_second_view,_  = imtensor.load_nearby(args.tensorimage_second_view, ss, args.size_patch)
 
+    fused_image,entropy_mask__view,entropy_mask_second_view = do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view,args.size_patch, args.size_patch, speedup=1,fast_computation=True)
+   
+    if args.extramargin>args.size_patch:
+	args.extramargin=args.size_patch
+    
+    offset_margin=args.size_patch - args.extramargin
+    fused_image_output=fused_image[offset_margin:sc_in[0]-offset_margin,offset_margin:sc_in[1]-offset_margin,offset_margin:sc_in[2]-offset_margin]
+    atom = tables.UInt8Atom()
+    mkdir_p(args.outdir)
+    h5f = tables.openFile(args.outdir + '/' + args.substack_id + '.h5', 'w')
+    sc_out=fused_image_output.shape
+    ca = h5f.createCArray(h5f.root, 'full_image', atom, sc_out)
+    for z in xrange(0, sc_out[0], 1):
+        ca[z, :, :] = fused_image_output[z,:,:]
+    h5f.close()
 
-    ss_first_view = SubStack(args.first_view_dir, args.substack_id)
-    minz = int(ss_first_view.info['Files'][0].split("/")[-1].split('_')[-1].split('.tif')[0])
-    prefix = '_'.join(ss_first_view.info['Files'][0].split("/")[-1].split('_')[0:-1])+'_'
-    np_tensor_3d_first_view, _ = imtensor.load_nearby(args.first_view_dir.rstrip('//') + '.h5', ss_first_view, args.extramargin)
-
-    hf5_second_view = tables.openFile(args.second_view_dir.rstrip('//') + '/' + str(args.substack_id) + '.h5', 'r')
-    np_tensor_3d_second_view = np.array(hf5_second_view.root.full_image)
-    hf5_second_view.close()
-
-
-    _speedup=1
-    fused_image,entropy_mask__view,entropy_mask_second_view = do_content_based_fusion(np_tensor_3d_first_view,np_tensor_3d_second_view,args.size_patch, args.extramargin, speedup=_speedup,fast_computation=True)
-    #import ipdb; ipdb.set_trace()
-    imtensor.save_tensor_as_tif(fused_image, args.outdir+'/'+args.substack_id+'_speedup'+str(_speedup), minz,prefix=prefix)
-
+    imtensor.save_tensor_as_tif(fused_image_output, args.outdir+'/'+args.substack_id, minz,prefix=prefix)
+    print ("total time Preibisch fusion: %s" %(str(timeit.default_timer() - total_start)))
 
 
 def get_parser():
@@ -125,6 +128,10 @@ def get_parser():
                         help='must contain indir/info.json, substacks, e.g. indir/000, e.g. indir/000-GT.marker')
     parser.add_argument('second_view_dir', metavar='second_view_dir', type=str,
                         help='must contain indir/info.json, substacks, e.g. indir/000, e.g. indir/000-GT.marker')
+    parser.add_argument('tensorimage_first_view', metavar='tensorimage_first_view', type=str,
+                        help='path to the tensor image .h5 file of the first view')
+    parser.add_argument('tensorimage_second_view', metavar='tensorimage_second_view', type=str,
+                        help='path to the tensor image .h5 file of the first view')
     parser.add_argument('substack_id', metavar='substack_id', type=str,
                         help='substack identifier, e.g. 010608')
     parser.add_argument('outdir', metavar='outdir', type=str,
@@ -134,7 +141,9 @@ def get_parser():
                         help='Extra margin for convolution. Should be equal to (filter_size - 1)/2')
     parser.add_argument('-s', '--size_patch', dest='size_patch',
                         action='store', type=int, default=4,
-                        help='Input and output patches are cubes of side (2*size+1)**3')
+                        help='local entropy will be computed inside cubic patches of side (2*size+1)')
+    parser.add_argument('--transformation_file', metavar='transformation_file', type=str,
+                        help='Transformation log file')
     return parser
 
 if __name__ == '__main__':
