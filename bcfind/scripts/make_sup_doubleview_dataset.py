@@ -249,7 +249,8 @@ def get_parser():
     parser = argparse.ArgumentParser(description=__doc__,
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('list_trainset', metavar='list_trainset', type=str,
-                        help='csv file of merged markers of the trainset')
+                        help='csv file of multi-view substacks chosen to make the testset. 
+                        The structure is substack_id,view1,view2, e.g 080833,180,090' )
     parser.add_argument('substacks_base_path', metavar='substacks_base_path', type=str,
                         help='Name of the folder in which substacks of the aligned views are stored')
     parser.add_argument('tensors_base_path', metavar='tensors_base_path', type=str,
