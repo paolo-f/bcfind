@@ -36,6 +36,14 @@ eval_perf.py
    :func: get_parser
    :prog: eval_perf.py
 
+global_eval_perf.py
+^^^^^^^^^^^^
+
+.. argparse::
+   :module: bcfind.scripts.global_eval_perf
+   :func: get_parser
+   :prog: global_eval_perf.py
+
 results_table.py
 ^^^^^^^^^^^^^^^^
 
