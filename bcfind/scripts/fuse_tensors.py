@@ -7,7 +7,6 @@ import numpy as np
 import os
 from PIL import Image
 import glob
-import cv2
 import argparse
 
 from clsm_registration.rigid_transformation import fuse_tensors

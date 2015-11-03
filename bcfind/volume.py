@@ -12,7 +12,7 @@ import tables
 import pandas as pd
 import numpy as np
 from PIL import Image
-import ImageDraw
+from PIL import ImageDraw
 import cPickle as pickle
 from scipy.spatial import cKDTree
 

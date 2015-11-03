@@ -14,7 +14,6 @@ from os import listdir
 from os.path import isfile, isdir, join, exists
 from bcfind.utils import mkdir_p
 from clsm_registration.rigid_transformation import parse_transformation_file
-import threshold
 
 
 def inside_margin(c,substack):

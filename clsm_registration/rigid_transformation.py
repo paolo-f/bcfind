@@ -4,7 +4,6 @@ import tables
 import uuid
 from progressbar import *
 from PIL import Image
-import cv2
 from pyparsing import Word, nums, restOfLine, Suppress, Group, Combine, Optional,alphanums
 import glob
 
@@ -291,7 +290,7 @@ def fuse_tensors(outdir,pixels_redChannel,pixels_greenChannel,pixels_blueChannel
     mkdir_p(outdir)
     num_slices=pixels_redChannel.shape[0]
     for z in xrange(0, num_slices, 1):
-        pixels_merged = cv2.merge((pixels_redChannel[z], pixels_greenChannel[z], pixels_blueChannel[z]))
+        pixels_merged = Image.merge("RGB", (pixels_redChannel[z], pixels_greenChannel[z], pixels_blueChannel[z]))
         im = Image.fromarray(pixels_merged)
         tempname = '/tmp/'+str(uuid.uuid4())+'.tif'
         im.save(tempname)
