@@ -74,9 +74,7 @@ def make_pos_neg_dataset(tensor_first_view, tensor_second_view, ss, C, view1_id,
 
             target_tensor_3d =  np.maximum(np.array(target_tensor_3d_tmp * 255.0, dtype=np.uint8), target_tensor_3d)
 
-    save_debug=False
-
-    if save_debug:
+    if save_tiff_files:
         debug_path='/tmp/debug/sigma_'+str(default_sigma)
         mkdir_p(debug_path)
         minz = 0
