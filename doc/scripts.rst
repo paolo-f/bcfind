@@ -171,6 +171,14 @@ make_sup_doubleview_dataset.py
     :func: get_parser
     :prog: make_sup_doubleview_dataset.py
 
+make_sup_oneview_dataset_content_based_fusion.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. argparse::
+    :module: bcfind.scripts.make_sup_oneview_dataset_content_based_fusion
+    :func: get_parser
+    :prog: make_sup_oneview_dataset_content_based_fusion.py
+
 merge_markers_substack.py
 ^^^^^^^^^^^^^^^^^^^^^
 
