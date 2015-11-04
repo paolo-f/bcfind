@@ -17,3 +17,4 @@ doc/_build
 */*.so
 */*.c
 build
+TMP
