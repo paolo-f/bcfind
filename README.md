@@ -23,4 +23,4 @@ References
 
 [1] Frasconi, P., Silvestri, L., Soda, P., Cortini, R., Pavone, F. S., & Iannello, G. (2014). Large-scale automated identification of mouse brain cells in confocal light sheet microscopy images. Bioinformatics, 30(17), i587–i593. http://doi.org/10.1093/bioinformatics/btu469.
 
-[2] Paciscopi, M., Silvestri, L., Pavone, F.S., & Frasconi, P. (2015). Cell identification in whole-brain multiview images of neural activation maps. Arxiv (submitted)
+[2] Paciscopi, M., Silvestri, L., Pavone, F.S., & Frasconi, P. (2015). Cell identification in whole-brain multiview images of neural activation maps.  http://arxiv.org/abs/1511.01168.
